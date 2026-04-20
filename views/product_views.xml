@@ -6,10 +6,10 @@
         <field name="arch" type="xml">
 
             <xpath expr="//sheet/notebook" position="inside">
-                <page string="Smart Inventory">
-                    <group>
-                        <field name="low_stock_threshold"/>
-                        <field name="is_low_stock" widget="boolean_toggle"/>
+                <page string="Smart Inventory" name="smart_inventory_page">
+                    <group name="inventory_alerts" string="Inventory Stock Alerts">
+                        <field name="low_stock_threshold" readonly="0"/>
+                        <field name="is_low_stock" readonly="1"/>
                     </group>
                 </page>
             </xpath>
