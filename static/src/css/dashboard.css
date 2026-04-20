@@ -1,19 +1,47 @@
 .dashboard {
     display: flex;
-    gap: 20px;
-    padding: 20px;
+    gap: 24px;
+    padding: 32px;
+    background-color: #f8fafc;
+    min-height: 100vh;
 }
 
 .card {
-    background: #1e293b;
-    color: white;
-    padding: 20px;
-    border-radius: 12px;
-    width: 200px;
+    background: white;
+    color: #1e293b;
+    padding: 32px;
+    border-radius: 16px;
+    width: 260px;
     text-align: center;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+}
+
+.card h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.card span {
+    font-size: 3rem;
+    font-weight: 700;
+    display: block;
+    color: #0f172a;
 }
 
 .card.danger {
-    background: #dc2626;
+    border-left: 8px solid #ef4444;
+}
+
+.card.danger span {
+    color: #ef4444;
 }

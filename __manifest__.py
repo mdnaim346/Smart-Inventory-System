@@ -3,7 +3,7 @@
     "version": "1.0",
     "summary": "Advanced Inventory & Sales Automation",
     "author": "Naim Reza",
-    "depends": ["base", "stock", "sale", "mail", "purchase", "sale_purchase", "sale_stock"],
+    "depends": ["base", "stock", "sale_management", "purchase", "mail", "sale_purchase", "sale_stock", "contacts"],
     "data": [
         "security/ir.model.access.csv",
         "data/cron.xml",
