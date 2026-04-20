@@ -1,0 +1,15 @@
+<templates xml:space="preserve">
+    <t t-name="smart_inventory.Dashboard">
+        <div class="dashboard">
+            <div class="card">
+                <h2>Total Products</h2>
+                <span t-esc="this.totalProducts"/>
+            </div>
+
+            <div class="card danger">
+                <h2>Low Stock</h2>
+                <span t-esc="this.lowStock"/>
+            </div>
+        </div>
+    </t>
+</templates>

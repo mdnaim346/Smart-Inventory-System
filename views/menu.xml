@@ -1,0 +1,8 @@
+<odoo>
+    <menuitem id="smart_inventory_root" name="Smart Inventory" sequence="10"/>
+
+    <menuitem id="smart_inventory_dashboard"
+              name="Dashboard"
+              parent="smart_inventory_root"
+              action="smart_inventory_dashboard_action"/>
+</odoo>
