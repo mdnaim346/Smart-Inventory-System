@@ -19,37 +19,36 @@ class SaleOrder(models.Model):
 
     def _check_low_stock_and_create_po(self):
         """ Creates a Purchase Order for products where forecasted stock is below threshold. """
-        # Try to find a specific vendor, fallback to the first available partner
-        vendor = self.env['res.partner'].search([('name', '=', 'Draft Vendor')], limit=1)
-        if not vendor:
-            vendor = self.env['res.partner'].search([], limit=1)
-        
-        if not vendor:
-            return
-
         for order in self:
             for line in order.order_line:
                 product = line.product_id
                 if not product or product.detailed_type != 'product':
                     continue
                 
-                # Use forecasted quantity (virtual_available) to trigger PO immediately
-                if product.virtual_available <= product.low_stock_threshold:
+                # Check if product is low stock and auto-restock is enabled
+                if product.is_low_stock and product.auto_restock:
+                    vendor = product._get_vendor()
+                    if not vendor:
+                        continue
+
                     # Prevent duplicate POs for the same Sale Order and Product
                     existing_po = self.env['purchase.order'].search([
                         ('state', '=', 'draft'),
-                        ('origin', '=', order.name),
+                        ('origin', '=', 'Auto Restock'),
                         ('order_line.product_id', '=', product.id)
-                    ])
+                    ], limit=1)
                     
                     if not existing_po:
-                        self.env["purchase.order"].create({
+                        po = self.env["purchase.order"].create({
                             "partner_id": vendor.id,
-                            "origin": order.name,
+                            "origin": "Auto Restock",
                             "order_line": [(0, 0, {
                                 "product_id": product.id,
-                                "product_qty": 50,
+                                "product_qty": product.restock_quantity,
                                 "price_unit": product.standard_price or 1.0,
                                 "name": product.name,
+                                "date_planned": fields.Datetime.now(),
                             })]
                         })
+                        # Create notification activity
+                        product._create_notification_activity(po)

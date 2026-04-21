@@ -1,16 +1,33 @@
 <odoo>
-    <record id="view_product_form_inherit" model="ir.ui.view">
-        <field name="name">product.form.smart.inventory</field>
+    <record id="view_product_form_inherit_smart" model="ir.ui.view">
+        <field name="name">product.form.smart.inventory.advanced</field>
         <field name="model">product.template</field>
         <field name="inherit_id" ref="product.product_template_form_view"/>
         <field name="arch" type="xml">
 
             <xpath expr="//sheet/notebook" position="inside">
-                <page string="Smart Inventory" name="smart_inventory_page">
-                    <group name="inventory_alerts" string="Inventory Stock Alerts">
-                        <field name="low_stock_threshold" readonly="0"/>
-                        <field name="is_low_stock" readonly="1"/>
+                <page string="Smart Inventory 🚀">
+                    <group>
+                        <group>
+                            <field name="low_stock_threshold"/>
+                            <field name="restock_quantity"/>
+                            <field name="auto_restock"/>
+                        </group>
+
+                        <group>
+                            <field name="preferred_vendor_id"/>
+                            <field name="forecast_shortage" readonly="1"/>
+                            <field name="is_low_stock" widget="boolean_toggle"/>
+                        </group>
                     </group>
+
+                    <footer>
+                        <button name="action_check_and_restock"
+                                type="object"
+                                string="Manual Restock"
+                                class="btn-primary"/>
+                    </footer>
+
                 </page>
             </xpath>
 

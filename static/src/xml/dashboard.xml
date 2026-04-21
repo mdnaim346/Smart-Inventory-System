@@ -1,14 +1,121 @@
 <templates xml:space="preserve">
     <t t-name="smart_inventory.Dashboard">
-        <div class="dashboard">
-            <div class="card">
-                <h2>Total Products</h2>
-                <span t-esc="state.totalProducts"/>
-            </div>
- 
-            <div class="card danger">
-                <h2>Low Stock</h2>
-                <span t-esc="state.lowStock"/>
+        <div class="smart-dashboard">
+            <!-- Header Section -->
+            <header class="dashboard-header">
+                <div class="title-area">
+                    <h1>Smart Inventory Command Center</h1>
+                    <p class="subtitle">AI-Driven Stock Optimization &amp; Automation</p>
+                </div>
+                <div class="action-area">
+                    <button class="btn-refresh" t-on-click="loadData">
+                        <i class="fa fa-refresh"/> Refresh
+                    </button>
+                    <button class="btn-primary-action" t-on-click="triggerRestock">
+                        <i class="fa fa-bolt"/> Run Global Restock
+                    </button>
+                </div>
+            </header>
+
+            <!-- Stats Overview -->
+            <section class="stats-grid">
+                <div class="stat-card primary">
+                    <div class="icon-box"><i class="fa fa-cubes"/></div>
+                    <div class="stat-info">
+                        <span class="label">Total Products</span>
+                        <h2 t-esc="state.totalProducts"/>
+                    </div>
+                </div>
+                <div class="stat-card danger">
+                    <div class="icon-box"><i class="fa fa-warning"/></div>
+                    <div class="stat-info">
+                        <span class="label">Low Stock Alerts</span>
+                        <h2 t-esc="state.lowStockCount"/>
+                    </div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="icon-box"><i class="fa fa-clock-o"/></div>
+                    <div class="stat-info">
+                        <span class="label">Pending RFQs</span>
+                        <h2 t-esc="state.pendingOrders"/>
+                    </div>
+                </div>
+                <div class="stat-card success">
+                    <div class="icon-box"><i class="fa fa-check-circle"/></div>
+                    <div class="stat-info">
+                        <span class="label">System Status</span>
+                        <h2>Healthy</h2>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <!-- Low Stock Table -->
+                <div class="content-box low-stock-list">
+                    <div class="box-header">
+                        <h3><i class="fa fa-exclamation-triangle"/> Critical Stock Shortages</h3>
+                    </div>
+                    <div class="box-body">
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Available</th>
+                                    <th>Threshold</th>
+                                    <th>Shortage</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="state.lowStockProducts" t-as="product" t-key="product.id">
+                                    <tr class="low-stock-row">
+                                        <td><strong t-esc="product.name"/></td>
+                                        <td><span class="badge badge-danger" t-esc="product.qty_available"/></td>
+                                        <td t-esc="product.low_stock_threshold"/>
+                                        <td><span class="text-danger" t-esc="product.forecast_shortage"/></td>
+                                        <td>
+                                            <button class="btn-view" t-on-click="() => this.openProduct(product.id)">
+                                                <i class="fa fa-external-link"/> View
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </t>
+                                <t t-if="state.lowStockCount === 0">
+                                    <tr>
+                                        <td colspan="5" class="empty-state">🎉 All stock levels are sufficient!</td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="content-box recent-activities">
+                    <div class="box-header">
+                        <h3><i class="fa fa-history"/> Recent Auto-Restocks</h3>
+                    </div>
+                    <div class="box-body">
+                        <div class="activity-timeline">
+                            <t t-foreach="state.recentActivities" t-as="po" t-key="po.id">
+                                <div class="activity-item" t-on-click="() => this.openPurchaseOrder(po.id)">
+                                    <div class="time-stamp" t-esc="po.date_order"/>
+                                    <div class="activity-desc">
+                                        <strong>Restock Initiated: <t t-esc="po.name"/></strong>
+                                        <p>Vendor: <t t-esc="po.partner_id[1]"/></p>
+                                    </div>
+                                    <div class="activity-status">
+                                        <span t-attf-class="badge badge-#{po.state}" t-esc="po.state"/>
+                                    </div>
+                                </div>
+                            </t>
+                            <t t-if="state.recentActivities.length === 0">
+                                <p class="empty-state">No recent restock activity.</p>
+                            </t>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </t>
