@@ -1,8 +1,19 @@
+/* DYNAMIC SCROLL UNLOCK - DIAGNOSED BY AI AGENT */
+body:has(.smart-dashboard) .o_action_manager {
+    overflow-y: auto !important;
+}
+
+body:has(.smart-dashboard) .o_content {
+    overflow-y: auto !important;
+}
+
 .smart-dashboard {
-    padding: 2rem;
+    padding: 2rem 2rem 10rem 2rem;
     background-color: #f1f5f9;
-    min-height: 100%;
-    overflow-y: auto;
+    display: block !important;
+    height: auto !important;
+    min-height: 100% !important;
+    overflow-y: visible !important;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     color: #1e293b;
 }
