@@ -19,32 +19,33 @@
 
             <!-- Stats Overview -->
             <section class="stats-grid">
-                <div class="stat-card primary">
-                    <div class="icon-box"><i class="fa fa-cubes"/></div>
+                <div class="stat-card primary glass-effect">
+                    <div class="icon-box pulse-blue"><i class="fa fa-cubes"/></div>
                     <div class="stat-info">
                         <span class="label">Total Products</span>
                         <h2 t-esc="state.totalProducts"/>
                     </div>
+                    <div class="card-glow"></div>
                 </div>
-                <div class="stat-card danger">
-                    <div class="icon-box"><i class="fa fa-warning"/></div>
+                <div class="stat-card danger glass-effect">
+                    <div class="icon-box pulse-red"><i class="fa fa-warning"/></div>
                     <div class="stat-info">
                         <span class="label">Low Stock Alerts</span>
                         <h2 t-esc="state.lowStockCount"/>
                     </div>
                 </div>
-                <div class="stat-card warning">
-                    <div class="icon-box"><i class="fa fa-clock-o"/></div>
+                <div class="stat-card warning glass-effect">
+                    <div class="icon-box pulse-orange"><i class="fa fa-clock-o"/></div>
                     <div class="stat-info">
                         <span class="label">Pending RFQs</span>
                         <h2 t-esc="state.pendingOrders"/>
                     </div>
                 </div>
-                <div class="stat-card success">
-                    <div class="icon-box"><i class="fa fa-check-circle"/></div>
+                <div class="stat-card success glass-effect">
+                    <div class="icon-box pulse-green"><i class="fa fa-shield"/></div>
                     <div class="stat-info">
-                        <span class="label">System Status</span>
-                        <h2>Healthy</h2>
+                        <span class="label">System Shield</span>
+                        <h2>Active</h2>
                     </div>
                 </div>
             </section>

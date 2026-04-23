@@ -35,8 +35,11 @@ export class InventoryDashboard extends Component {
             this.state.lowStockProducts = products.filter(p => p.is_low_stock);
             this.state.lowStockCount = this.state.lowStockProducts.length || 0;
             
-            // AI Recommendations: Products with medium/high risk or specific insights
-            this.state.aiRecommendations = products.filter(p => p.risk_level !== 'low' || p.predicted_demand > p.qty_available).slice(0, 5);
+            // Format numbers and filter recommendations
+            this.state.aiRecommendations = products.map(p => ({
+                ...p,
+                predicted_demand: parseFloat(p.predicted_demand || 0).toFixed(2)
+            })).filter(p => p.risk_level !== 'low' || parseFloat(p.predicted_demand) > p.qty_available).slice(0, 5);
 
             // 2. Fetch Recent Auto-Restock POs
             const activities = await this.orm.searchRead(
