@@ -49,6 +49,43 @@
                 </div>
             </section>
 
+            <!-- AI Insights Panel -->
+            <section class="ai-insights-panel mb-4">
+                <div class="content-box ai-card">
+                    <div class="box-header ai-header">
+                        <h3><i class="fa fa-magic"/> AI Strategic Recommendations</h3>
+                        <span class="badge badge-ai">BETA</span>
+                    </div>
+                    <div class="box-body">
+                        <div class="ai-recommendations-grid">
+                            <t t-foreach="state.aiRecommendations" t-as="rec" t-key="rec.id">
+                                <div t-attf-class="ai-rec-card risk-#{rec.risk_level}">
+                                    <div class="rec-icon">
+                                        <i t-if="rec.risk_level == 'high'" class="fa fa-warning text-danger"/>
+                                        <i t-else="" class="fa fa-lightbulb-o text-warning"/>
+                                    </div>
+                                    <div class="rec-details">
+                                        <h4 t-esc="rec.name"/>
+                                        <p class="insight-text" t-esc="rec.ai_insight"/>
+                                        <div class="rec-meta">
+                                            <span>Pred. Demand: <strong t-esc="rec.predicted_demand"/></span>
+                                            <span class="ms-2">Risk: <strong t-esc="rec.risk_level.toUpperCase()"/></span>
+                                        </div>
+                                    </div>
+                                    <button class="btn-action" t-on-click="() => this.openProduct(rec.id)">Optimize</button>
+                                </div>
+                            </t>
+                            <t t-if="state.aiRecommendations.length === 0">
+                                <div class="empty-state">
+                                    <i class="fa fa-check-circle-o fa-3x mb-2 text-success"/>
+                                    <p>AI has no urgent recommendations. Everything is running smoothly!</p>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- Main Content -->
             <div class="main-content">
                 <!-- Low Stock Table -->

@@ -13,6 +13,7 @@ export class InventoryDashboard extends Component {
             lowStockCount: 0,
             pendingOrders: 0,
             lowStockProducts: [],
+            aiRecommendations: [],
             recentActivities: [],
         });
 
@@ -27,17 +28,20 @@ export class InventoryDashboard extends Component {
             const products = await this.orm.searchRead(
                 "product.template",
                 [],
-                ["name", "qty_available", "low_stock_threshold", "is_low_stock", "forecast_shortage"]
+                ["name", "qty_available", "low_stock_threshold", "is_low_stock", "forecast_shortage", "predicted_demand", "risk_level", "ai_insight"]
             );
 
             this.state.totalProducts = products.length || 0;
             this.state.lowStockProducts = products.filter(p => p.is_low_stock);
             this.state.lowStockCount = this.state.lowStockProducts.length || 0;
+            
+            // AI Recommendations: Products with medium/high risk or specific insights
+            this.state.aiRecommendations = products.filter(p => p.risk_level !== 'low' || p.predicted_demand > p.qty_available).slice(0, 5);
 
             // 2. Fetch Recent Auto-Restock POs
             const activities = await this.orm.searchRead(
                 "purchase.order",
-                [["origin", "=", "Auto Restock"]],
+                [["origin", "in", ["Auto Restock", "AI Smart Restock"]]],
                 ["name", "partner_id", "amount_total", "state", "date_order"],
                 { limit: 5, order: "date_order desc" }
             );
@@ -46,7 +50,7 @@ export class InventoryDashboard extends Component {
             // 3. Fetch Pending Orders Count
             this.state.pendingOrders = await this.orm.searchCount(
                 "purchase.order",
-                [["state", "=", "draft"], ["origin", "=", "Auto Restock"]]
+                [["state", "=", "draft"], ["origin", "in", ["Auto Restock", "AI Smart Restock"]]]
             );
 
         } catch (error) {

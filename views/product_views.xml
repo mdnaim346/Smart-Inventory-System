@@ -6,28 +6,51 @@
         <field name="arch" type="xml">
 
             <xpath expr="//sheet/notebook" position="inside">
-                <page string="Smart Inventory 🚀">
+                <page string="AI Smart Inventory 🤖" name="ai_inventory">
+                    <header>
+                        <button name="action_generate_ai_insights"
+                                type="object"
+                                string="Generate AI Insight"
+                                class="btn-primary"
+                                icon="fa-magic"/>
+                    </header>
+                    
+                    <div class="alert alert-info py-2" role="alert" invisible="not ai_insight">
+                        <i class="fa fa-info-circle mr-2"/>
+                        <field name="ai_insight" nolabel="1"/>
+                    </div>
+
                     <group>
-                        <group>
+                        <group string="AI Predictions">
+                            <field name="predicted_demand" widget="base_unit" options="{'type': 'number'}"/>
+                            <field name="risk_level" widget="badge" 
+                                   decoration-danger="risk_level == 'high'" 
+                                   decoration-warning="risk_level == 'medium'" 
+                                   decoration-success="risk_level == 'low'"/>
+                            <field name="last_ai_update" readonly="1"/>
+                        </group>
+                        
+                        <group string="Configuration">
                             <field name="low_stock_threshold"/>
                             <field name="restock_quantity"/>
-                            <field name="auto_restock"/>
-                        </group>
-
-                        <group>
+                            <field name="auto_restock" widget="boolean_toggle"/>
                             <field name="preferred_vendor_id"/>
-                            <field name="forecast_shortage" readonly="1"/>
-                            <field name="is_low_stock" widget="boolean_toggle"/>
                         </group>
+                    </group>
+
+                    <group string="Stock Status">
+                        <field name="qty_available"/>
+                        <field name="forecast_shortage" invisible="forecast_shortage == 0"/>
+                        <field name="is_low_stock" widget="boolean_toggle"/>
                     </group>
 
                     <footer>
                         <button name="action_check_and_restock"
                                 type="object"
-                                string="Manual Restock"
-                                class="btn-primary"/>
+                                string="Manual AI Restock"
+                                class="btn-secondary"
+                                icon="fa-refresh"/>
                     </footer>
-
                 </page>
             </xpath>
 

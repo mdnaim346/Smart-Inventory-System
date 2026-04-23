@@ -1,7 +1,7 @@
 {
-    "name": "Smart Inventory System",
-    "version": "1.0",
-    "summary": "Advanced Inventory & Sales Automation",
+    "name": "AI-Powered Smart Inventory",
+    "version": "2.0",
+    "summary": "AI-Driven Demand Forecasting & Automated Procurement",
     "author": "Naim Reza",
     "depends": ["base", "stock", "sale_management", "purchase", "mail", "sale_purchase", "sale_stock", "contacts"],
     "data": [
