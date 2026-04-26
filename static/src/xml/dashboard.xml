@@ -1,160 +1,197 @@
 <templates xml:space="preserve">
     <t t-name="smart_inventory.Dashboard">
-        <div class="smart-dashboard">
-            <!-- Header Section -->
-            <header class="dashboard-header">
-                <div class="title-area">
-                    <h1>Smart Inventory Command Center</h1>
-                    <p class="subtitle">AI-Driven Stock Optimization &amp; Automation</p>
-                </div>
-                <div class="action-area">
-                    <button class="btn-refresh" t-on-click="loadData">
-                        <i class="fa fa-refresh"/> Refresh
-                    </button>
-                    <button class="btn-primary-action" t-on-click="triggerRestock">
-                        <i class="fa fa-bolt"/> Run Global Restock
-                    </button>
-                </div>
-            </header>
+        <div class="smart-dashboard-premium">
+            <!-- Animated Background Elements -->
+            <div class="dashboard-bg-glow"></div>
+            
+            <div class="dashboard-container">
+                <!-- Navigation / Top Header -->
+                <nav class="glass-header">
+                    <div class="brand">
+                        <div class="brand-logo">
+                            <i class="fa fa-braille animate-spin-slow"></i>
+                        </div>
+                        <div class="brand-text">
+                            <span class="brand-name">NEBULA <span class="text-gradient">SMART</span></span>
+                            <span class="brand-tagline">Inventory Intelligence</span>
+                        </div>
+                    </div>
+                    <div class="top-actions">
+                        <div class="system-status">
+                            <span class="pulse-dot"></span>
+                            <span class="status-text">AI ENGINE ONLINE</span>
+                        </div>
+                        <button class="btn-neon-secondary" t-on-click="loadData">
+                            <i class="fa fa-refresh"/>
+                        </button>
+                        <button class="btn-neon-primary" t-on-click="triggerRestock">
+                            <i class="fa fa-rocket"/> RESTOCK SHIELD
+                        </button>
+                    </div>
+                </nav>
 
-            <!-- Stats Overview -->
-            <section class="stats-grid">
-                <div class="stat-card primary glass-effect">
-                    <div class="icon-box pulse-blue"><i class="fa fa-cubes"/></div>
-                    <div class="stat-info">
-                        <span class="label">Total Products</span>
-                        <h2 t-esc="state.totalProducts"/>
-                    </div>
-                    <div class="card-glow"></div>
-                </div>
-                <div class="stat-card danger glass-effect">
-                    <div class="icon-box pulse-red"><i class="fa fa-warning"/></div>
-                    <div class="stat-info">
-                        <span class="label">Low Stock Alerts</span>
-                        <h2 t-esc="state.lowStockCount"/>
-                    </div>
-                </div>
-                <div class="stat-card warning glass-effect">
-                    <div class="icon-box pulse-orange"><i class="fa fa-clock-o"/></div>
-                    <div class="stat-info">
-                        <span class="label">Pending RFQs</span>
-                        <h2 t-esc="state.pendingOrders"/>
-                    </div>
-                </div>
-                <div class="stat-card success glass-effect">
-                    <div class="icon-box pulse-green"><i class="fa fa-shield"/></div>
-                    <div class="stat-info">
-                        <span class="label">System Shield</span>
-                        <h2>Active</h2>
-                    </div>
-                </div>
-            </section>
+                <!-- Main Grid Layout -->
+                <div class="dashboard-grid">
+                    
+                    <!-- Left Column: Metrics & Main Data -->
+                    <div class="dashboard-left">
+                        
+                        <!-- Hero Stats Row -->
+                        <section class="metrics-row">
+                            <div class="metric-card glass-morph color-blue">
+                                <div class="metric-icon"><i class="fa fa-cubes"/></div>
+                                <div class="metric-content">
+                                    <span class="metric-label">Total Inventory</span>
+                                    <h2 class="metric-value" t-esc="state.totalProducts"/>
+                                    <div class="metric-trend positive">+12% vs last month</div>
+                                </div>
+                            </div>
+                            <div class="metric-card glass-morph color-red">
+                                <div class="metric-icon"><i class="fa fa-warning"/></div>
+                                <div class="metric-content">
+                                    <span class="metric-label">Stock Risks</span>
+                                    <h2 class="metric-value" t-esc="state.lowStockCount"/>
+                                    <div class="metric-trend negative">Critical Threshold</div>
+                                </div>
+                            </div>
+                            <div class="metric-card glass-morph color-orange">
+                                <div class="metric-icon"><i class="fa fa-shopping-cart"/></div>
+                                <div class="metric-content">
+                                    <span class="metric-label">Active RFQs</span>
+                                    <h2 class="metric-value" t-esc="state.pendingOrders"/>
+                                    <div class="metric-trend neutral">Processing Orders</div>
+                                </div>
+                            </div>
+                        </section>
 
-            <!-- AI Insights Panel -->
-            <section class="ai-insights-panel mb-4">
-                <div class="content-box ai-card">
-                    <div class="box-header ai-header">
-                        <h3><i class="fa fa-magic"/> AI Strategic Recommendations</h3>
-                        <span class="badge badge-ai">BETA</span>
+                        <!-- Critical Stock Monitor -->
+                        <section class="data-section glass-morph mt-4">
+                            <div class="section-header">
+                                <h3><i class="fa fa-bolt text-warning"/> Critical Stock Shortages</h3>
+                                <div class="header-actions">
+                                    <span class="live-indicator">LIVE MONITOR</span>
+                                </div>
+                            </div>
+                            <div class="section-body">
+                                <div class="table-container">
+                                    <table class="nebula-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Product Name</th>
+                                                <th>Current Stock</th>
+                                                <th>Min Threshold</th>
+                                                <th>Risk Factor</th>
+                                                <th>Navigation</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="state.lowStockProducts" t-as="product" t-key="product.id">
+                                                <tr class="nebula-row">
+                                                    <td class="product-info">
+                                                        <div class="product-avatar" t-esc="product.name ? product.name[0] : '?'"/>
+                                                        <span t-esc="product.name || 'Unnamed Product'"/>
+                                                    </td>
+                                                    <td>
+                                                        <div class="stock-progress">
+                                                            <div class="progress-info">
+                                                                <span class="text-danger" t-esc="product.qty_available"/> / <span t-esc="product.low_stock_threshold"/>
+                                                            </div>
+                                                            <div class="progress-bar-container">
+                                                                <div class="progress-bar-fill bg-danger" t-attf-style="width: #{(product.qty_available / product.low_stock_threshold) * 100}%"></div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td t-esc="product.low_stock_threshold"/>
+                                                    <td>
+                                                        <span class="risk-badge" t-attf-class="risk-#{product.risk_level || 'low'}" t-esc="(product.risk_level || 'low').toUpperCase()"/>
+                                                    </td>
+                                                    <td>
+                                                        <button class="btn-icon-only" t-on-click="() => this.openProduct(product.id)">
+                                                            <i class="fa fa-external-link"/>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                            <t t-if="state.lowStockCount === 0">
+                                                <tr class="empty-row">
+                                                    <td colspan="5">
+                                                        <div class="empty-state-pulse">
+                                                            <i class="fa fa-shield-check text-success"/>
+                                                            <p>Inventory Shields at 100%. No shortages detected.</p>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </section>
                     </div>
-                    <div class="box-body">
-                        <div class="ai-recommendations-grid">
-                            <t t-foreach="state.aiRecommendations" t-as="rec" t-key="rec.id">
-                                <div t-attf-class="ai-rec-card risk-#{rec.risk_level}">
-                                    <div class="rec-icon">
-                                        <i t-if="rec.risk_level == 'high'" class="fa fa-warning text-danger"/>
-                                        <i t-else="" class="fa fa-lightbulb-o text-warning"/>
-                                    </div>
-                                    <div class="rec-details">
-                                        <h4 t-esc="rec.name"/>
-                                        <p class="insight-text" t-esc="rec.ai_insight"/>
-                                        <div class="rec-meta">
-                                            <span>Pred. Demand: <strong t-esc="rec.predicted_demand"/></span>
-                                            <span class="ms-2">Risk: <strong t-esc="rec.risk_level.toUpperCase()"/></span>
+
+                    <!-- Right Column: AI Insights & History -->
+                    <div class="dashboard-right">
+                        
+                        <!-- AI Genius Panel -->
+                        <section class="ai-side-panel glass-morph mb-4">
+                            <div class="ai-header-premium">
+                                <div class="ai-tag text-gradient">AI INSIGHT ENGINE</div>
+                                <h3>Predictive Optimization</h3>
+                            </div>
+                            <div class="ai-body">
+                                <t t-foreach="state.aiRecommendations" t-as="rec" t-key="rec.id">
+                                    <div class="ai-insight-card" t-on-click="() => this.openProduct(rec.id)">
+                                        <div class="insight-top">
+                                            <span class="rec-title" t-esc="rec.name || 'Insight'"/>
+                                            <span t-attf-class="risk-indicator risk-#{rec.risk_level || 'low'}"></span>
+                                        </div>
+                                        <p class="insight-summary" t-esc="rec.ai_insight"/>
+                                        <div class="insight-stats">
+                                            <div class="stat-item">
+                                                <span class="s-label">DEMAND</span>
+                                                <span class="s-value" t-esc="rec.predicted_demand"/>
+                                            </div>
+                                            <button class="btn-mini-action">OPTIMIZE</button>
                                         </div>
                                     </div>
-                                    <button class="btn-action" t-on-click="() => this.openProduct(rec.id)">Optimize</button>
-                                </div>
-                            </t>
-                            <t t-if="state.aiRecommendations.length === 0">
-                                <div class="empty-state">
-                                    <i class="fa fa-check-circle-o fa-3x mb-2 text-success"/>
-                                    <p>AI has no urgent recommendations. Everything is running smoothly!</p>
-                                </div>
-                            </t>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Main Content -->
-            <div class="main-content">
-                <!-- Low Stock Table -->
-                <div class="content-box low-stock-list">
-                    <div class="box-header">
-                        <h3><i class="fa fa-exclamation-triangle"/> Critical Stock Shortages</h3>
-                    </div>
-                    <div class="box-body">
-                        <table class="modern-table">
-                            <thead>
-                                <tr>
-                                    <th>Product</th>
-                                    <th>Available</th>
-                                    <th>Threshold</th>
-                                    <th>Shortage</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <t t-foreach="state.lowStockProducts" t-as="product" t-key="product.id">
-                                    <tr class="low-stock-row">
-                                        <td><strong t-esc="product.name"/></td>
-                                        <td><span class="badge badge-danger" t-esc="product.qty_available"/></td>
-                                        <td t-esc="product.low_stock_threshold"/>
-                                        <td><span class="text-danger" t-esc="product.forecast_shortage"/></td>
-                                        <td>
-                                            <button class="btn-view" t-on-click="() => this.openProduct(product.id)">
-                                                <i class="fa fa-external-link"/> View
-                                            </button>
-                                        </td>
-                                    </tr>
                                 </t>
-                                <t t-if="state.lowStockCount === 0">
-                                    <tr>
-                                        <td colspan="5" class="empty-state">🎉 All stock levels are sufficient!</td>
-                                    </tr>
+                                <t t-if="state.aiRecommendations.length === 0">
+                                    <div class="ai-empty">
+                                        <i class="fa fa-brain-circuit"/>
+                                        <p>Neural networks are currently idle.</p>
+                                    </div>
                                 </t>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                            </div>
+                        </section>
 
-                <!-- Recent Activity -->
-                <div class="content-box recent-activities">
-                    <div class="box-header">
-                        <h3><i class="fa fa-history"/> Recent Auto-Restocks</h3>
-                    </div>
-                    <div class="box-body">
-                        <div class="activity-timeline">
-                            <t t-foreach="state.recentActivities" t-as="po" t-key="po.id">
-                                <div class="activity-item" t-on-click="() => this.openPurchaseOrder(po.id)">
-                                    <div class="time-stamp" t-esc="po.date_order"/>
-                                    <div class="activity-desc">
-                                        <strong>Restock Initiated: <t t-esc="po.name"/></strong>
-                                        <p>Vendor: <t t-esc="po.partner_id[1]"/></p>
+                        <!-- Restock Logs -->
+                        <section class="logs-panel glass-morph">
+                            <div class="section-header">
+                                <h3><i class="fa fa-history"/> Auto-Log</h3>
+                            </div>
+                            <div class="log-stream">
+                                <t t-foreach="state.recentActivities" t-as="po" t-key="po.id">
+                                    <div class="log-item" t-on-click="() => this.openPurchaseOrder(po.id)">
+                                        <div class="log-marker border-#{po.state}"></div>
+                                        <div class="log-content">
+                                            <div class="log-title"><strong t-esc="po.name"/> Initiated</div>
+                                            <div class="log-sub text-muted" t-esc="po.partner_id[1]"/>
+                                            <div class="log-footer">
+                                                <span class="log-time" t-esc="po.date_order"/>
+                                                <span t-attf-class="log-status badge-#{po.state}" t-esc="po.state.toUpperCase()"/>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="activity-status">
-                                        <span t-attf-class="badge badge-#{po.state}" t-esc="po.state"/>
-                                    </div>
-                                </div>
-                            </t>
-                            <t t-if="state.recentActivities.length === 0">
-                                <p class="empty-state">No recent restock activity.</p>
-                            </t>
-                        </div>
+                                </t>
+                                <t t-if="state.recentActivities.length === 0">
+                                    <div class="p-3 text-center text-muted italic">No recent restock events.</div>
+                                </t>
+                            </div>
+                        </section>
                     </div>
+
                 </div>
             </div>
         </div>
     </t>
-</templates>
+</templates>
