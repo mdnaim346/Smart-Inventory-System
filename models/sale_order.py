@@ -1,13 +1,25 @@
 from odoo import models, fields, api
+import logging
+
+_logger = logging.getLogger(__name__)
 
 class SaleOrder(models.Model):
     _inherit = "sale.order"
 
     def action_confirm(self):
-        """ Override confirm to check for low stock and create RFQs automatically. """
+        """ Override confirm to check for low stock and create RFQs automatically, plus auto-invoice. """
         res = super().action_confirm()
         self._check_low_stock_and_create_po()
+        self._create_auto_invoice()
         return res
+
+    def _create_auto_invoice(self):
+        """ Automatically create and post invoice on SO confirmation. """
+        for order in self:
+            if order.invoice_status == 'to invoice':
+                invoices = order._create_invoices()
+                invoices.action_post()
+                # Optional: Send by email or other actions could be added here
 
     def write(self, vals):
         """ Hook into write to catch custom status changes from dashboards. """
@@ -15,6 +27,7 @@ class SaleOrder(models.Model):
         # Check standard Odoo state 'sale' and any custom 'status' field set to 'confirmed'
         if vals.get('status') == 'confirmed' or vals.get('state') == 'sale':
             self._check_low_stock_and_create_po()
+            self._create_auto_invoice()
         return res
 
     def _check_low_stock_and_create_po(self):

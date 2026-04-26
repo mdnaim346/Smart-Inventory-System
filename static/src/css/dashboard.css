@@ -3,29 +3,27 @@
    Aesthetics: Glassmorphism / Neon Accents / Dynamic Animations
 */
 
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
-
 :root {
-    --nebula-bg: #0b0e14;
-    --nebula-card-bg: rgba(30, 41, 59, 0.4);
-    --nebula-glass-border: rgba(255, 255, 255, 0.08);
-    --nebula-primary: #6366f1;
-    --nebula-secondary: #a855f7;
-    --nebula-success: #10b981;
-    --nebula-warning: #f59e0b;
-    --nebula-danger: #ef4444;
-    --nebula-text-main: #f8fafc;
-    --nebula-text-dim: #94a3b8;
-    --nebula-accent-glow: rgba(99, 102, 241, 0.15);
+    --nebula-bg: #0f172a;
+    --nebula-card-bg: rgba(30, 41, 59, 0.8);
+    --nebula-glass-border: rgba(255, 255, 255, 0.15);
+    --nebula-primary: #818cf8;
+    --nebula-secondary: #c084fc;
+    --nebula-success: #34d399;
+    --nebula-warning: #fbbf24;
+    --nebula-danger: #f87171;
+    --nebula-text-main: #ffffff;
+    --nebula-text-dim: #cbd5e1;
+    --nebula-accent-glow: rgba(99, 102, 241, 0.25);
     
-    --grad-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
-    --shadow-neon: 0 0 20px rgba(99, 102, 241, 0.3);
+    --grad-primary: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    --shadow-neon: 0 0 25px rgba(99, 102, 241, 0.4);
 }
 
 /* Odoo Action Manager Overrides */
 body:has(.smart-dashboard-premium) .o_action_manager,
 body:has(.smart-dashboard-premium) .o_content {
-    background-color: var(--nebula-bg) !important;
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%) !important;
     overflow-y: auto !important;
     height: 100% !important;
 }
@@ -34,8 +32,8 @@ body:has(.smart-dashboard-premium) .o_content {
     min-height: 100%;
     padding: 2rem;
     font-family: 'Plus Jakarta Sans', sans-serif;
-    color: var(--nebula-text-main);
-    background-color: var(--nebula-bg);
+    color: var(--nebula-text-main) !important;
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
     position: relative;
     overflow: hidden;
 }
@@ -233,16 +231,17 @@ body:has(.smart-dashboard-premium) .o_content {
 
 .metric-label {
     display: block;
-    color: var(--nebula-text-dim);
-    font-size: 0.75rem;
-    font-weight: 600;
+    color: var(--nebula-text-dim) !important;
+    font-size: 0.8rem;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
 
 .metric-value {
-    font-size: 2rem;
+    font-size: 2.25rem;
     font-weight: 800;
+    color: #ffffff !important;
     margin: 0.25rem 0;
 }
 
@@ -282,8 +281,9 @@ body:has(.smart-dashboard-premium) .o_content {
 }
 
 .section-header h3 {
-    font-size: 1.1rem;
-    font-weight: 700;
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #ffffff !important;
     margin: 0;
     display: flex;
     align-items: center;
@@ -312,11 +312,12 @@ body:has(.smart-dashboard-premium) .o_content {
 }
 
 .nebula-table th {
-    padding: 1rem 1.5rem;
+    padding: 1.25rem 1.5rem;
     text-align: left;
-    color: var(--nebula-text-dim);
-    font-size: 0.75rem;
-    font-weight: 700;
+    color: var(--nebula-text-dim) !important;
+    font-size: 0.85rem;
+    font-weight: 800;
+    text-transform: uppercase;
 }
 
 .nebula-row {
@@ -389,19 +390,20 @@ body:has(.smart-dashboard-premium) .o_content {
 }
 
 .ai-insight-card {
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(255, 255, 255, 0.08);
     margin: 0 1rem 1rem 1rem;
-    padding: 1.25rem;
+    padding: 1.5rem;
     border-radius: 1.25rem;
-    border: 1px solid var(--nebula-glass-border);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     cursor: pointer;
     transition: all 0.3s;
 }
 
 .ai-insight-card:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.15);
     transform: scale(1.02);
     border-color: var(--nebula-primary);
+    box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.5);
 }
 
 .insight-top {
@@ -418,9 +420,9 @@ body:has(.smart-dashboard-premium) .o_content {
 }
 
 .insight-summary {
-    font-size: 0.8rem;
-    line-height: 1.5;
-    color: var(--nebula-text-dim);
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: #e2e8f0;
     margin-bottom: 1rem;
 }
 
@@ -480,10 +482,10 @@ body:has(.smart-dashboard-premium) .o_content {
     padding-left: 1rem;
 }
 
-.log-title { font-size: 0.85rem; font-weight: 700; }
-.log-sub { font-size: 0.75rem; margin: 0.25rem 0; }
-.log-footer { display: flex; gap: 1rem; align-items: center; margin-top: 0.5rem; }
-.log-time { font-size: 0.7rem; color: var(--nebula-text-dim); }
+.log-title { font-size: 0.9rem; font-weight: 800; color: #ffffff; }
+.log-sub { font-size: 0.8rem; margin: 0.25rem 0; color: #cbd5e1; }
+.log-footer { display: flex; gap: 1rem; align-items: center; margin-top: 0.75rem; }
+.log-time { font-size: 0.75rem; color: #94a3b8; }
 .log-status { font-size: 0.6rem; font-weight: 800; padding: 0.2rem 0.5rem; border-radius: 4px; }
 
 /* Risk Badges */

@@ -13,6 +13,7 @@
     ],
     "assets": {
         "web.assets_backend": [
+            "https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap",
             "smart_inventory/static/src/js/dashboard.js",
             "smart_inventory/static/src/xml/dashboard.xml",
             "smart_inventory/static/src/css/dashboard.css",

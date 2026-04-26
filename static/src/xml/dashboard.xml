@@ -21,10 +21,10 @@
                             <span class="pulse-dot"></span>
                             <span class="status-text">AI ENGINE ONLINE</span>
                         </div>
-                        <button class="btn-neon-secondary" t-on-click="loadData">
+                        <button id="btn_refresh_dashboard" name="action_refresh" class="btn-neon-secondary" t-on-click="loadData">
                             <i class="fa fa-refresh"/>
                         </button>
-                        <button class="btn-neon-primary" t-on-click="triggerRestock">
+                        <button id="btn_global_restock" name="action_restock" class="btn-neon-primary" t-on-click="triggerRestock">
                             <i class="fa fa-rocket"/> RESTOCK SHIELD
                         </button>
                     </div>
@@ -106,7 +106,7 @@
                                                         <span class="risk-badge" t-attf-class="risk-#{product.risk_level || 'low'}" t-esc="(product.risk_level || 'low').toUpperCase()"/>
                                                     </td>
                                                     <td>
-                                                        <button class="btn-icon-only" t-on-click="() => this.openProduct(product.id)">
+                                                        <button t-attf-id="btn_view_product_#{product.id}" t-attf-name="view_product_#{product.id}" class="btn-icon-only" t-on-click="() => this.openProduct(product.id)">
                                                             <i class="fa fa-external-link"/>
                                                         </button>
                                                     </td>
@@ -151,7 +151,7 @@
                                                 <span class="s-label">DEMAND</span>
                                                 <span class="s-value" t-esc="rec.predicted_demand"/>
                                             </div>
-                                            <button class="btn-mini-action">OPTIMIZE</button>
+                                            <button t-attf-id="btn_optimize_#{rec.id}" t-attf-name="optimize_#{rec.id}" class="btn-mini-action">OPTIMIZE</button>
                                         </div>
                                     </div>
                                 </t>
