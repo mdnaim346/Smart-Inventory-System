@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "owner": "mdnaim346",
+  "repositories": [
+    { "name": "Smart-Inventory-System", "label": "repo:smart-inventory" }
+  ],
+  "project": {
+    "number": 2,
+    "id": "PVT_kwHODFE5D84BmrkC",
+    "title": "Smart Inventory Board",
+    "url": "https://github.com/users/mdnaim346/projects/2"
+  },
+  "fields": {
+    "Status": {
+      "id": "PVTSSF_lAHODFE5D84BmrkCzhlTlV8",
+      "options": {
+        "Todo": "f75ad846",
+        "In Progress": "47fc9ee4",
+        "Done": "98236657"
+      },
+      "workflow": {
+        "Backlog": "Todo",
+        "Ready": "Todo",
+        "In Progress": "In Progress",
+        "In Review": "In Progress",
+        "Done": "Done"
+      }
+    },
+    "Priority": {
+      "id": "PVTSSF_lAHODFE5D84BmrkCzhlTmWE",
+      "options": {
+        "P0": "6802ffac",
+        "P1": "21618130",
+        "P2": "399a22c2",
+        "P3": "92505685"
+      }
+    },
+    "Size": {
+      "id": "PVTSSF_lAHODFE5D84BmrkCzhlTmao",
+      "options": {
+        "XS": "a71b47f8",
+        "S": "9693fe83",
+        "M": "f089c87a",
+        "L": "cae9ee78",
+        "XL": "55abfb7d"
+      }
+    },
+    "Estimate": {
+      "id": "PVTF_lAHODFE5D84BmrkCzhlTmbk",
+      "type": "number"
+    }
+  },
+  "labels": {
+    "bootstrapped": true,
+    "customDomains": ["domain:inventory"]
+  },
+  "team": ["mdnaim346"],
+  "conventions": {
+    "source": "__manifest__.py",
+    "techStack": "Odoo 19 addon (Python models, XML views, OWL dashboard JS/XML/CSS); depends on stock, sale_management, purchase, mail",
+    "moduleName": "smart_inventory",
+    "testCommand": "odoo-bin -c <config> -d <test_db> -u smart_inventory --test-enable --stop-after-init",
+    "lintCommand": null
+  },
+  "extensions": {
+    "subIssue": {
+      "available": true,
+      "detectedAt": "2026-10-12"
+    }
+  }
+}
