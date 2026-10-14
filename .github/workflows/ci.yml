@@ -14,7 +14,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install ruff
-      - run: ruff check --select E,F,W --ignore E501 --exclude tests/__init__.py --exclude .claude .
+      - run: ruff check .
 
   test:
     runs-on: ubuntu-latest

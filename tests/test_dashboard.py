@@ -75,7 +75,7 @@ class TestDashboardData(SmartInventoryCase):
         Digest = self.env["smart.inventory.digest"]
         self.env["product.template"].search([("risk_level", "=", "high")]).risk_level = "low"
         self.env["purchase.order"].search(self.env["purchase.order"]._si_smart_domain()).button_cancel()
-        self.env.user.email = "admin@example.com"
+        self.env.ref("base.user_admin").email = "admin@example.com"
         self.assertFalse(Digest._cron_send_digest())
         self.low.risk_level = "high"
         mails = Digest._cron_send_digest()

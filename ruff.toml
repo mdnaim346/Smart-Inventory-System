@@ -1,0 +1,9 @@
+extend-exclude = [".claude"]
+
+[lint]
+select = ["E", "F", "W"]
+ignore = ["E501"]
+
+[lint.per-file-ignores]
+# Odoo loads modules through package imports
+"__init__.py" = ["F401"]
