@@ -1,0 +1,79 @@
+<odoo>
+    <record id="res_config_settings_view_form_smart_inventory" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.smart.inventory</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="60"/>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="Smart Inventory" string="Smart Inventory" name="smart_inventory"
+                     groups="smart_inventory.group_smart_inventory_manager">
+                    <block title="Sales Automation" name="si_sales">
+                        <setting company_dependent="1" help="Refuse to confirm a sale when a storable product lacks usable stock in the order's warehouse">
+                            <field name="si_block_out_of_stock"/>
+                        </setting>
+                        <setting company_dependent="1" help="Validate the delivery right after confirmation">
+                            <field name="si_auto_deliver"/>
+                            <div class="mt-2" invisible="not si_auto_deliver">
+                                <field name="si_create_backorder"/>
+                                <label for="si_create_backorder"/>
+                            </div>
+                        </setting>
+                        <setting company_dependent="1" help="Create and post the customer invoice after confirmation">
+                            <field name="si_auto_invoice"/>
+                        </setting>
+                    </block>
+                    <block title="Forecasting" name="si_forecast">
+                        <setting help="Days of demand predicted by each forecast">
+                            <field name="si_forecast_horizon"/>
+                        </setting>
+                        <setting help="Send forecasts to the connected AI provider; otherwise the statistical baseline is used">
+                            <field name="si_ai_enabled"/>
+                            <div class="mt-2" invisible="not si_ai_enabled">
+                                <div><label for="si_ai_batch_size"/> <field name="si_ai_batch_size" class="oe_inline"/></div>
+                                <div><label for="si_ai_daily_limit"/> <field name="si_ai_daily_limit" class="oe_inline"/></div>
+                            </div>
+                        </setting>
+                    </block>
+                    <block title="Replenishment" name="si_replenishment">
+                        <setting help="Create purchase orders, or only maintain Odoo reordering rules">
+                            <field name="si_replenish_mode"/>
+                        </setting>
+                        <setting help="Order enough stock for this many days of demand (computed reorder mode)">
+                            <field name="si_target_cover_days"/>
+                        </setting>
+                        <setting help="Probability of not running out during the vendor lead time">
+                            <field name="si_service_level"/>
+                            <div class="mt-2">
+                                <div><label for="si_service_level_a"/> <field name="si_service_level_a" class="oe_inline"/></div>
+                                <div><label for="si_service_level_b"/> <field name="si_service_level_b" class="oe_inline"/></div>
+                                <div><label for="si_service_level_c"/> <field name="si_service_level_c" class="oe_inline"/></div>
+                            </div>
+                        </setting>
+                        <setting help="Smart restock POs above this amount need a manager's approval (0 = off)">
+                            <field name="si_po_approval_amount"/>
+                        </setting>
+                    </block>
+                    <block title="Stock Health and Alerts" name="si_health">
+                        <setting help="Products with stock but no sale for this many days are dead stock and are not restocked">
+                            <field name="si_dead_stock_days"/>
+                        </setting>
+                        <setting help="Show lots that expire within this many days on the dashboard">
+                            <field name="si_expiry_alert_days"/>
+                        </setting>
+                        <setting company_dependent="1" help="Users who receive the daily risk digest (default: Smart Inventory Managers)">
+                            <field name="si_digest_user_ids" widget="many2many_tags"/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="action_smart_inventory_settings" model="ir.actions.act_window">
+        <field name="name">Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="context">{'module': 'smart_inventory', 'bin_size': False}</field>
+    </record>
+</odoo>

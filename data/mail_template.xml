@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="digest_email">
+        <div style="font-family: Arial, sans-serif; font-size: 14px;">
+            <p>Smart Inventory digest for <strong t-out="company.name"/> (<t t-out="date"/>).</p>
+            <t t-if="products">
+                <h3 style="margin-bottom: 4px;">High-risk products (<t t-out="len(products)"/>)</h3>
+                <table cellpadding="4" style="border-collapse: collapse;">
+                    <tr style="background: #f2f2f2;">
+                        <th align="left">Product</th><th align="right">Usable</th>
+                        <th align="right">Predicted demand</th><th align="left">Insight</th>
+                    </tr>
+                    <tr t-foreach="products" t-as="p">
+                        <td t-out="p.display_name"/>
+                        <td align="right" t-out="'%.2f' % p.usable_qty"/>
+                        <td align="right" t-out="'%.2f' % p.predicted_demand"/>
+                        <td t-out="p.ai_insight or ''"/>
+                    </tr>
+                </table>
+            </t>
+            <t t-if="orders">
+                <h3 style="margin-bottom: 4px;">Pending smart restock POs (<t t-out="len(orders)"/>)</h3>
+                <ul>
+                    <li t-foreach="orders" t-as="o">
+                        <t t-out="o.name"/> — <t t-out="o.partner_id.name"/>:
+                        <t t-out="o.amount_total" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                        <t t-if="o.si_approval_state == 'pending'"> (waiting for approval)</t>
+                    </li>
+                </ul>
+            </t>
+        </div>
+    </template>
+</odoo>

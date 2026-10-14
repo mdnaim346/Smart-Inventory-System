@@ -1,19 +1,59 @@
 <odoo>
     <record id="ir_cron_auto_restock" model="ir.cron">
-        <field name="name">AI-Powered Auto Restock</field>
+        <field name="name">Smart Inventory: Auto Restock</field>
         <field name="model_id" ref="product.model_product_template"/>
         <field name="state">code</field>
-        <field name="code">model.search([('auto_restock','=',True)]).action_check_and_restock()</field>
+        <field name="code">model._cron_auto_restock()</field>
         <field name="interval_number">1</field>
         <field name="interval_type">hours</field>
         <field name="active">True</field>
     </record>
 
     <record id="ir_cron_generate_ai_insights" model="ir.cron">
-        <field name="name">Daily AI Inventory Insights</field>
+        <field name="name">Smart Inventory: Forecast Refresh</field>
         <field name="model_id" ref="product.model_product_template"/>
         <field name="state">code</field>
-        <field name="code">model.search([]).action_generate_ai_insights()</field>
+        <field name="code">model._cron_generate_insights()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active">True</field>
+    </record>
+
+    <record id="ir_cron_fill_forecast_actuals" model="ir.cron">
+        <field name="name">Smart Inventory: Forecast Accuracy</field>
+        <field name="model_id" ref="model_smart_inventory_forecast"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_fill_actuals()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active">True</field>
+    </record>
+
+    <record id="ir_cron_stock_health" model="ir.cron">
+        <field name="name">Smart Inventory: Dead Stock Check</field>
+        <field name="model_id" ref="product.model_product_template"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_update_stock_health()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active">True</field>
+    </record>
+
+    <record id="ir_cron_abc_xyz" model="ir.cron">
+        <field name="name">Smart Inventory: ABC/XYZ Classification</field>
+        <field name="model_id" ref="product.model_product_template"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_classify_abc_xyz()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">months</field>
+        <field name="active">True</field>
+    </record>
+
+    <record id="ir_cron_daily_digest" model="ir.cron">
+        <field name="name">Smart Inventory: Daily Risk Digest</field>
+        <field name="model_id" ref="model_smart_inventory_digest"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_send_digest()</field>
         <field name="interval_number">1</field>
         <field name="interval_type">days</field>
         <field name="active">True</field>

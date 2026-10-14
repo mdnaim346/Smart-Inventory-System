@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ruff
+      - run: ruff check --select E,F,W --ignore E501 --exclude tests/__init__.py --exclude .claude .
+
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: odoo
+          POSTGRES_PASSWORD: odoo
+          POSTGRES_DB: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: addons/smart_inventory
+      - uses: actions/checkout@v4
+        with:
+          repository: odoo/odoo
+          ref: "19.0"
+          path: odoo
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: odoo/requirements.txt
+      - name: System packages
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libldap2-dev libsasl2-dev
+      - name: Python packages
+        run: pip install -r odoo/requirements.txt
+      - name: Install and test smart_inventory
+        run: |
+          python odoo/odoo-bin \
+            --addons-path=odoo/addons,addons \
+            --db_host=localhost --db_user=odoo --db_password=odoo \
+            -d ci_smart_inventory -i smart_inventory,product_expiry \
+            --test-tags /smart_inventory \
+            --stop-after-init --log-level=test 2>&1 | tee odoo.log
+          ! grep -E "(ERROR|CRITICAL) ci_smart_inventory" odoo.log

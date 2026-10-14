@@ -1,108 +1,82 @@
-from odoo import models, fields, api
-from odoo.exceptions import UserError
 import logging
+from collections import defaultdict
+
+from odoo import models, _
+from odoo.exceptions import UserError
+from odoo.tools import float_compare
 
 _logger = logging.getLogger(__name__)
+
 
 class SaleOrder(models.Model):
     _inherit = "sale.order"
 
     def action_confirm(self):
-        """ Override confirm to:
-        1. Prevent selling if stock is insufficient.
-        2. Create RFQs for low stock.
-        3. Auto-invoice.
-        4. Auto-validate delivery (to update On Hand quantity).
+        """Confirm, then run the Smart Inventory automation once.
+        Each step can be switched off per company in Settings (E5.2):
+        1. block out-of-stock sales, 2. replenish low stock,
+        3. validate the delivery, 4. post the invoice.
         """
-        self._validate_stock_availability()
+        self.filtered(lambda o: o.company_id.si_block_out_of_stock)._validate_stock_availability()
         res = super().action_confirm()
         self._check_low_stock_and_create_po()
-        self._create_auto_invoice()
-        self._validate_auto_delivery()
-        return res
-
-    def _validate_auto_delivery(self):
-        """ Automatically validate the delivery order to update On Hand stock immediately. """
-        for order in self:
-            for picking in order.picking_ids:
-                if picking.state not in ('done', 'cancel'):
-                    _logger.info("Auto-validating delivery %s for order %s", picking.name, order.name)
-                    # Assign stock and set quantities
-                    picking.action_assign()
-                    for move in picking.move_ids_without_package:
-                        move.quantity = move.product_uom_qty
-                    # Validate the picking (passing context to skip backorder/etc wizards if possible)
-                    picking.with_context(skip_backorder=True, picking_label_types=False).button_validate()
-
-    def _create_auto_invoice(self):
-        """ Automatically create and post invoice on SO confirmation. """
-        for order in self:
-            try:
-                if order.invoice_status == 'to invoice':
-                    invoices = order._create_invoices()
-                    invoices.action_post()
-            except Exception as e:
-                _logger.warning("Auto-invoice failed for %s: %s", order.name, str(e))
-
-    def write(self, vals):
-        """ Hook into write to catch custom status changes from dashboards. """
-        if vals.get('status') == 'confirmed' or vals.get('state') == 'sale':
-            self._validate_stock_availability()
-            
-        res = super().write(vals)
-        # Check standard Odoo state 'sale' and any custom 'status' field set to 'confirmed'
-        if vals.get('status') == 'confirmed' or vals.get('state') == 'sale':
-            self._check_low_stock_and_create_po()
-            self._create_auto_invoice()
-            self._validate_auto_delivery()
+        self.filtered(lambda o: o.company_id.si_auto_deliver)._validate_auto_delivery()
+        self.filtered(lambda o: o.company_id.si_auto_invoice)._create_auto_invoice()
         return res
 
     def _validate_stock_availability(self):
-        """ Cross-checks order lines against available stock. """
+        """Block confirmation when a storable product lacks usable stock in the order's warehouse."""
         for order in self:
-            for line in order.order_line:
-                # Odoo 17 specific check for storable products
-                is_storable = line.product_id.type == 'product'
-                if is_storable and line.product_uom_qty > line.product_id.qty_available:
-                    raise UserError(
-                        f"OUT OF STOCK: Order for '{line.product_id.name}' blocked.\n"
-                        f"Requested: {line.product_uom_qty}\n"
-                        f"Available: {line.product_id.qty_available}\n"
-                        f"Please restock before confirming."
-                    )
+            needed = defaultdict(float)
+            for line in order.order_line.filtered(lambda line: line.product_id.is_storable):
+                needed[line.product_id] += line.product_uom_id._compute_quantity(
+                    line.product_uom_qty, line.product_id.uom_id)
+            for product, qty in needed.items():
+                product_wh = product.with_context(warehouse_id=order.warehouse_id.id)
+                expired = product._si_expired_qty(order.warehouse_id).get(product.id, 0.0)
+                available = product_wh.qty_available - expired
+                if float_compare(qty, available, precision_rounding=product.uom_id.rounding) > 0:
+                    raise UserError(_(
+                        "OUT OF STOCK: Order for '%(product)s' blocked.\n"
+                        "Requested: %(requested)s\nAvailable: %(available)s\n"
+                        "Please restock before confirming.",
+                        product=product.display_name, requested=qty, available=available))
 
     def _check_low_stock_and_create_po(self):
-        """ Creates a Purchase Order for products where forecasted stock is below threshold. """
+        """Replenish low products of the confirmed orders (same path as the cron)."""
         for order in self:
-            for line in order.order_line:
-                product = line.product_id
-                if not product or product.detailed_type != 'product':
-                    continue
-                
-                # Check if product is low stock and auto-restock is enabled
-                if product.is_low_stock and product.auto_restock:
-                    vendor = product._get_vendor()
-                    if not vendor:
-                        continue
+            products = order.order_line.product_id.filtered("is_storable")
+            if products:
+                # Salespeople need no Purchase or Smart Inventory rights to trigger a restock.
+                products.sudo().with_company(order.company_id)._si_smart_restock(
+                    warehouses=order.warehouse_id.sudo())
 
-                    # Prevent duplicate POs for the same Sale Order and Product
-                    existing_po = self.env['purchase.order'].search([
-                        ('state', '=', 'draft'),
-                        ('origin', '=', 'Auto Restock'),
-                        ('order_line.product_id', '=', product.id)
-                    ], limit=1)
-                    
-                    if not existing_po:
-                        po = self.env["purchase.order"].create({
-                            "partner_id": vendor.id,
-                            "origin": "Auto Restock",
-                            "order_line": [(0, 0, {
-                                "product_id": product.id,
-                                "product_qty": product.restock_quantity,
-                                "price_unit": product.standard_price or 1.0,
-                                "name": product.name,
-                                "date_planned": fields.Datetime.now(),
-                            })]
-                        })
-                        # Create notification activity
-                        product._create_notification_activity(po)
+    def _validate_auto_delivery(self):
+        """Validate deliveries with the reserved quantities. Unreserved quantities
+        become a backorder or are dropped, depending on the company setting."""
+        for order in self:
+            backorder = order.company_id.si_create_backorder
+            for picking in order.picking_ids.filtered(lambda p: p.state not in ("done", "cancel")):
+                picking.action_assign()
+                moves = picking.move_ids.filtered(lambda m: m.state not in ("done", "cancel"))
+                if not any(m.quantity for m in moves):
+                    continue
+                ctx = {"skip_backorder": True, "skip_sms": True, "skip_immediate": True}
+                if not backorder:
+                    ctx["picking_ids_not_to_backorder"] = picking.ids
+                try:
+                    with self.env.cr.savepoint():
+                        picking.with_context(**ctx).button_validate()
+                except UserError as e:
+                    _logger.warning("Auto-delivery of %s for %s skipped: %s", picking.name, order.name, e)
+
+    def _create_auto_invoice(self):
+        """Create and post the invoice of confirmed orders."""
+        for order in self:
+            if order.invoice_status != "to invoice":
+                continue
+            try:
+                with self.env.cr.savepoint():
+                    order._create_invoices().action_post()
+            except UserError as e:
+                _logger.warning("Auto-invoice failed for %s: %s", order.name, e)

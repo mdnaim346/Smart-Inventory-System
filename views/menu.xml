@@ -1,8 +1,30 @@
 <odoo>
-    <menuitem id="smart_inventory_root" name="Smart Inventory" sequence="10"/>
+    <menuitem id="smart_inventory_root" name="Smart Inventory" sequence="10"
+              groups="smart_inventory.group_smart_inventory_user"/>
 
-    <menuitem id="smart_inventory_dashboard"
-              name="Dashboard"
-              parent="smart_inventory_root"
-              action="smart_inventory_dashboard_action"/>
+    <menuitem id="smart_inventory_dashboard" name="Dashboard" parent="smart_inventory_root"
+              action="smart_inventory_dashboard_action" sequence="1"/>
+
+    <menuitem id="smart_inventory_menu_products" name="Products" parent="smart_inventory_root" sequence="10"/>
+    <menuitem id="smart_inventory_menu_at_risk" name="Products at Risk" parent="smart_inventory_menu_products"
+              action="action_products_at_risk" sequence="1"/>
+    <menuitem id="smart_inventory_menu_dead_stock" name="Dead Stock" parent="smart_inventory_menu_products"
+              action="action_dead_stock" sequence="2"/>
+    <menuitem id="smart_inventory_menu_levels" name="Warehouse Stock Levels" parent="smart_inventory_menu_products"
+              action="action_stock_levels" sequence="3"/>
+
+    <menuitem id="smart_inventory_menu_replenishment" name="Replenishment" parent="smart_inventory_root" sequence="20"/>
+    <menuitem id="smart_inventory_menu_pos" name="Smart Restock Orders" parent="smart_inventory_menu_replenishment"
+              action="action_smart_purchase_orders" sequence="1"/>
+    <menuitem id="smart_inventory_menu_transfers" name="Transfer Suggestions" parent="smart_inventory_menu_replenishment"
+              action="action_transfer_suggestions" sequence="2"/>
+
+    <menuitem id="smart_inventory_menu_reporting" name="Reporting" parent="smart_inventory_root" sequence="30"/>
+    <menuitem id="smart_inventory_menu_forecasts" name="Forecast History" parent="smart_inventory_menu_reporting"
+              action="action_forecast_history" sequence="1"/>
+
+    <menuitem id="smart_inventory_menu_config" name="Configuration" parent="smart_inventory_root" sequence="90"
+              groups="smart_inventory.group_smart_inventory_manager"/>
+    <menuitem id="smart_inventory_menu_settings" name="Settings" parent="smart_inventory_menu_config"
+              action="action_smart_inventory_settings" sequence="1"/>
 </odoo>

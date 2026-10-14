@@ -1,2 +1,8 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_product,product,product.model_product_template,,1,1,1,1
+access_forecast_user,smart.inventory.forecast user,model_smart_inventory_forecast,group_smart_inventory_user,1,0,0,0
+access_forecast_manager,smart.inventory.forecast manager,model_smart_inventory_forecast,group_smart_inventory_manager,1,1,1,1
+access_stock_level_user,smart.inventory.stock.level user,model_smart_inventory_stock_level,group_smart_inventory_user,1,0,0,0
+access_stock_level_manager,smart.inventory.stock.level manager,model_smart_inventory_stock_level,group_smart_inventory_manager,1,1,1,1
+access_transfer_suggestion_user,smart.inventory.transfer.suggestion user,model_smart_inventory_transfer_suggestion,group_smart_inventory_user,1,0,0,0
+access_transfer_suggestion_manager,smart.inventory.transfer.suggestion manager,model_smart_inventory_transfer_suggestion,group_smart_inventory_manager,1,1,1,1
+access_po_reject_wizard_manager,smart.inventory.po.reject.wizard manager,model_smart_inventory_po_reject_wizard,group_smart_inventory_manager,1,1,1,1

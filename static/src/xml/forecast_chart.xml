@@ -1,0 +1,18 @@
+<templates xml:space="preserve">
+    <t t-name="smart_inventory.ForecastChart">
+        <div class="o_action si-forecast-chart p-4">
+            <t t-if="state.data and state.data.labels">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h3 class="mb-0">
+                        <a href="#" t-on-click.prevent="openProduct" t-esc="state.data.product"/>
+                    </h3>
+                    <span class="text-muted">Restock below: <t t-esc="state.data.minLevel"/></span>
+                </div>
+                <div class="si-chart-box">
+                    <canvas t-ref="canvas"/>
+                </div>
+            </t>
+            <div t-else="" class="text-muted">No product selected or no data yet.</div>
+        </div>
+    </t>
+</templates>

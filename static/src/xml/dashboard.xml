@@ -1,15 +1,14 @@
 <templates xml:space="preserve">
     <t t-name="smart_inventory.Dashboard">
         <div class="smart-dashboard-premium">
-            <!-- Animated Background Elements -->
             <div class="dashboard-bg-glow"></div>
-            
+
             <div class="dashboard-container">
-                <!-- Navigation / Top Header -->
+                <!-- Header -->
                 <nav class="glass-header">
                     <div class="brand">
                         <div class="brand-logo">
-                            <i class="fa fa-braille animate-spin-slow"></i>
+                            <i class="fa fa-braille animate-spin-slow"/>
                         </div>
                         <div class="brand-text">
                             <span class="brand-name">NEBULA <span class="text-gradient">SMART</span></span>
@@ -19,31 +18,82 @@
                     <div class="top-actions">
                         <div class="system-status">
                             <span class="pulse-dot"></span>
-                            <span class="status-text">AI ENGINE ONLINE</span>
+                            <span class="status-text" t-esc="state.loading ? 'LOADING' : 'FORECAST ENGINE ONLINE'"/>
                         </div>
-                        <button id="btn_refresh_dashboard" name="action_refresh" class="btn-neon-secondary" t-on-click="loadData">
+                        <button id="btn_refresh_dashboard" name="action_refresh" class="btn-neon-secondary"
+                                title="Refresh" t-on-click="loadData">
                             <i class="fa fa-refresh"/>
                         </button>
-                        <button id="btn_global_restock" name="action_restock" class="btn-neon-primary" t-on-click="triggerRestock">
+                        <button t-if="state.isManager" id="btn_global_restock" name="action_restock"
+                                class="btn-neon-primary" t-on-click="triggerRestock">
                             <i class="fa fa-rocket"/> RESTOCK SHIELD
                         </button>
                     </div>
                 </nav>
 
-                <!-- Main Grid Layout -->
+                <!-- Filters (E4.3) -->
+                <section class="si-filter-bar glass-morph">
+                    <label>Period
+                        <select t-on-change="onPeriodChange">
+                            <option value="7" t-att-selected="state.periodDays == 7">7 days</option>
+                            <option value="30" t-att-selected="state.periodDays == 30">30 days</option>
+                            <option value="90" t-att-selected="state.periodDays == 90">90 days</option>
+                        </select>
+                    </label>
+                    <label>Category
+                        <select t-on-change="(ev) => this.onFilterChange('categ_id', ev)">
+                            <option value="">All</option>
+                            <t t-foreach="state.options.categories" t-as="o" t-key="o.id">
+                                <option t-att-value="o.id" t-att-selected="state.filters.categ_id == o.id" t-esc="o.name"/>
+                            </t>
+                        </select>
+                    </label>
+                    <label>Warehouse
+                        <select t-on-change="(ev) => this.onFilterChange('warehouse_id', ev)">
+                            <option value="">All</option>
+                            <t t-foreach="state.options.warehouses" t-as="o" t-key="o.id">
+                                <option t-att-value="o.id" t-att-selected="state.filters.warehouse_id == o.id" t-esc="o.name"/>
+                            </t>
+                        </select>
+                    </label>
+                    <label>Vendor
+                        <select t-on-change="(ev) => this.onFilterChange('vendor_id', ev)">
+                            <option value="">All</option>
+                            <t t-foreach="state.options.vendors" t-as="o" t-key="o.id">
+                                <option t-att-value="o.id" t-att-selected="state.filters.vendor_id == o.id" t-esc="o.name"/>
+                            </t>
+                        </select>
+                    </label>
+                    <label>Risk
+                        <select t-on-change="(ev) => this.onFilterChange('risk_level', ev)">
+                            <option value="">All</option>
+                            <t t-foreach="state.options.risk_levels" t-as="o" t-key="o.id">
+                                <option t-att-value="o.id" t-att-selected="state.filters.risk_level == o.id" t-esc="o.name"/>
+                            </t>
+                        </select>
+                    </label>
+                    <button class="btn-mini-action" t-on-click="clearFilters">CLEAR</button>
+                    <div class="si-export">
+                        <span>Export</span>
+                        <button class="btn-mini-action" t-on-click="() => this.exportXlsx('shortage')">Shortages XLSX</button>
+                        <button class="btn-mini-action" t-on-click="() => this.exportPdf('shortage')">PDF</button>
+                        <button class="btn-mini-action" t-on-click="() => this.exportXlsx('forecast')">Forecast XLSX</button>
+                        <button class="btn-mini-action" t-on-click="() => this.exportPdf('forecast')">PDF</button>
+                        <button class="btn-mini-action" t-on-click="() => this.exportXlsx('dead')">Dead Stock XLSX</button>
+                        <button class="btn-mini-action" t-on-click="() => this.exportPdf('dead')">PDF</button>
+                    </div>
+                </section>
+
                 <div class="dashboard-grid">
-                    
-                    <!-- Left Column: Metrics & Main Data -->
                     <div class="dashboard-left">
-                        
-                        <!-- Hero Stats Row -->
+                        <!-- Counts -->
                         <section class="metrics-row">
                             <div class="metric-card glass-morph color-blue">
                                 <div class="metric-icon"><i class="fa fa-cubes"/></div>
                                 <div class="metric-content">
-                                    <span class="metric-label">Total Inventory</span>
+                                    <span class="metric-label">Storable Products</span>
                                     <h2 class="metric-value" t-esc="state.totalProducts"/>
-                                    <div class="metric-trend positive">+12% vs last month</div>
+                                    <div class="metric-trend neutral"><t t-esc="state.deadStockCount"/> dead stock</div>
                                 </div>
                             </div>
                             <div class="metric-card glass-morph color-red">
@@ -51,20 +101,48 @@
                                 <div class="metric-content">
                                     <span class="metric-label">Stock Risks</span>
                                     <h2 class="metric-value" t-esc="state.lowStockCount"/>
-                                    <div class="metric-trend negative">Critical Threshold</div>
+                                    <div class="metric-trend negative"><t t-esc="state.kpis.stockouts || 0"/> out of stock</div>
                                 </div>
                             </div>
                             <div class="metric-card glass-morph color-orange">
                                 <div class="metric-icon"><i class="fa fa-shopping-cart"/></div>
                                 <div class="metric-content">
-                                    <span class="metric-label">Active RFQs</span>
+                                    <span class="metric-label">Draft Restock POs</span>
                                     <h2 class="metric-value" t-esc="state.pendingOrders"/>
-                                    <div class="metric-trend neutral">Processing Orders</div>
+                                    <div class="metric-trend neutral"><t t-esc="state.pendingApprovals.length"/> awaiting approval</div>
                                 </div>
                             </div>
                         </section>
 
-                        <!-- Critical Stock Monitor -->
+                        <!-- KPIs (E4.1) -->
+                        <section class="metrics-row si-kpi-row mt-4">
+                            <div class="metric-card glass-morph">
+                                <div class="metric-content">
+                                    <span class="metric-label">Stock Value</span>
+                                    <h2 class="metric-value"><t t-esc="state.kpis.currency"/> <t t-esc="formatNumber(state.kpis.stockValue)"/></h2>
+                                </div>
+                            </div>
+                            <div class="metric-card glass-morph">
+                                <div class="metric-content">
+                                    <span class="metric-label">Turnover (<t t-esc="state.kpis.periodDays"/>d)</span>
+                                    <h2 class="metric-value" t-esc="state.kpis.turnover"/>
+                                </div>
+                            </div>
+                            <div class="metric-card glass-morph">
+                                <div class="metric-content">
+                                    <span class="metric-label">Days of Cover</span>
+                                    <h2 class="metric-value" t-esc="state.kpis.daysOfCover"/>
+                                </div>
+                            </div>
+                            <div class="metric-card glass-morph">
+                                <div class="metric-content">
+                                    <span class="metric-label">Fill Rate</span>
+                                    <h2 class="metric-value"><t t-esc="state.kpis.fillRate"/>%</h2>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Shortages -->
                         <section class="data-section glass-morph mt-4">
                             <div class="section-header">
                                 <h3><i class="fa fa-bolt text-warning"/> Critical Stock Shortages</h3>
@@ -78,8 +156,9 @@
                                         <thead>
                                             <tr>
                                                 <th>Product Name</th>
-                                                <th>Current Stock</th>
-                                                <th>Min Threshold</th>
+                                                <th>Usable Stock</th>
+                                                <th>Restock Below</th>
+                                                <th>Days of Cover</th>
                                                 <th>Risk Factor</th>
                                                 <th>Navigation</th>
                                             </tr>
@@ -97,16 +176,23 @@
                                                                 <span class="text-danger" t-esc="product.qty_available"/> / <span t-esc="product.low_stock_threshold"/>
                                                             </div>
                                                             <div class="progress-bar-container">
-                                                                <div class="progress-bar-fill bg-danger" t-attf-style="width: #{(product.qty_available / product.low_stock_threshold) * 100}%"></div>
+                                                                <div class="progress-bar-fill bg-danger" t-attf-style="width: #{stockPercent(product)}%"></div>
                                                             </div>
                                                         </div>
                                                     </td>
                                                     <td t-esc="product.low_stock_threshold"/>
+                                                    <td t-esc="product.days_of_cover"/>
                                                     <td>
-                                                        <span class="risk-badge" t-attf-class="risk-#{product.risk_level || 'low'}" t-esc="(product.risk_level || 'low').toUpperCase()"/>
+                                                        <span t-attf-class="risk-badge risk-#{(product.risk_level || 'low').toUpperCase()}" t-esc="(product.risk_level || 'low').toUpperCase()"/>
                                                     </td>
                                                     <td>
-                                                        <button t-attf-id="btn_view_product_#{product.id}" t-attf-name="view_product_#{product.id}" class="btn-icon-only" t-on-click="() => this.openProduct(product.id)">
+                                                        <button t-attf-id="btn_chart_product_#{product.id}" class="btn-icon-only" title="Forecast chart"
+                                                                t-on-click="() => this.openChart(product.id)">
+                                                            <i class="fa fa-line-chart"/>
+                                                        </button>
+                                                        <button t-attf-id="btn_view_product_#{product.id}" t-attf-name="view_product_#{product.id}"
+                                                                class="btn-icon-only" title="Open product"
+                                                                t-on-click="() => this.openProduct(product.id)">
                                                             <i class="fa fa-external-link"/>
                                                         </button>
                                                     </td>
@@ -114,9 +200,9 @@
                                             </t>
                                             <t t-if="state.lowStockCount === 0">
                                                 <tr class="empty-row">
-                                                    <td colspan="5">
+                                                    <td colspan="6">
                                                         <div class="empty-state-pulse">
-                                                            <i class="fa fa-shield-check text-success"/>
+                                                            <i class="fa fa-check-circle text-success"/>
                                                             <p>Inventory Shields at 100%. No shortages detected.</p>
                                                         </div>
                                                     </td>
@@ -127,15 +213,37 @@
                                 </div>
                             </div>
                         </section>
+
+                        <!-- Expiring lots (E3.3) -->
+                        <section t-if="state.expiringLots.length" class="data-section glass-morph mt-4">
+                            <div class="section-header">
+                                <h3><i class="fa fa-hourglass-half text-warning"/> Expiring Soon</h3>
+                            </div>
+                            <div class="table-container">
+                                <table class="nebula-table">
+                                    <thead>
+                                        <tr><th>Lot</th><th>Product</th><th>Quantity</th><th>Expires</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr t-foreach="state.expiringLots" t-as="lot" t-key="lot.id" class="nebula-row">
+                                            <td t-esc="lot.lot"/>
+                                            <td t-esc="lot.product"/>
+                                            <td t-esc="lot.quantity"/>
+                                            <td t-att-class="lot.expired ? 'text-danger' : ''">
+                                                <t t-esc="lot.expiration_date"/><t t-if="lot.expired"> (expired)</t>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
                     </div>
 
-                    <!-- Right Column: AI Insights & History -->
                     <div class="dashboard-right">
-                        
-                        <!-- AI Genius Panel -->
+                        <!-- Recommendations -->
                         <section class="ai-side-panel glass-morph mb-4">
                             <div class="ai-header-premium">
-                                <div class="ai-tag text-gradient">AI INSIGHT ENGINE</div>
+                                <div class="ai-tag text-gradient">INSIGHT ENGINE</div>
                                 <h3>Predictive Optimization</h3>
                             </div>
                             <div class="ai-body">
@@ -151,20 +259,62 @@
                                                 <span class="s-label">DEMAND</span>
                                                 <span class="s-value" t-esc="rec.predicted_demand"/>
                                             </div>
-                                            <button t-attf-id="btn_optimize_#{rec.id}" t-attf-name="optimize_#{rec.id}" class="btn-mini-action">OPTIMIZE</button>
+                                            <button t-attf-id="btn_optimize_#{rec.id}" t-attf-name="optimize_#{rec.id}" class="btn-mini-action"
+                                                    t-on-click.stop="() => this.openChart(rec.id)">CHART</button>
                                         </div>
                                     </div>
                                 </t>
                                 <t t-if="state.aiRecommendations.length === 0">
                                     <div class="ai-empty">
-                                        <i class="fa fa-brain-circuit"/>
-                                        <p>Neural networks are currently idle.</p>
+                                        <i class="fa fa-lightbulb-o"/>
+                                        <p>No recommendations right now.</p>
                                     </div>
                                 </t>
                             </div>
                         </section>
 
-                        <!-- Restock Logs -->
+                        <!-- Approvals (E2.5) -->
+                        <section t-if="state.pendingApprovals.length" class="logs-panel glass-morph mb-4">
+                            <div class="section-header">
+                                <h3><i class="fa fa-gavel"/> Awaiting Approval</h3>
+                            </div>
+                            <div class="log-stream">
+                                <div t-foreach="state.pendingApprovals" t-as="po" t-key="po.id" class="log-item">
+                                    <div class="log-content">
+                                        <div class="log-title" t-on-click="() => this.openPurchaseOrder(po.id)">
+                                            <strong t-esc="po.name"/> — <t t-esc="formatNumber(po.amount_untaxed)"/>
+                                        </div>
+                                        <div class="log-sub text-muted" t-esc="po.partner_id[1]"/>
+                                        <div t-if="state.isManager" class="log-footer">
+                                            <button class="btn-mini-action" t-on-click="() => this.approvePurchaseOrder(po.id)">APPROVE</button>
+                                            <button class="btn-mini-action" t-on-click="() => this.rejectPurchaseOrder(po.id)">REJECT</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Transfer suggestions (E3.2) -->
+                        <section t-if="state.transferSuggestions.length" class="logs-panel glass-morph mb-4">
+                            <div class="section-header">
+                                <h3><i class="fa fa-exchange"/> Transfer Instead of Buying</h3>
+                            </div>
+                            <div class="log-stream">
+                                <div t-foreach="state.transferSuggestions" t-as="s" t-key="s.id" class="log-item">
+                                    <div class="log-content">
+                                        <div class="log-title"><strong t-esc="s.product_id[1]"/></div>
+                                        <div class="log-sub text-muted">
+                                            <t t-esc="s.quantity"/> from <t t-esc="s.source_warehouse_id[1]"/> to <t t-esc="s.dest_warehouse_id[1]"/>
+                                        </div>
+                                        <div t-if="state.isManager" class="log-footer">
+                                            <button class="btn-mini-action" t-on-click="() => this.createTransfer(s.id)">CREATE TRANSFER</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Restock log -->
                         <section class="logs-panel glass-morph">
                             <div class="section-header">
                                 <h3><i class="fa fa-history"/> Auto-Log</h3>
@@ -172,7 +322,7 @@
                             <div class="log-stream">
                                 <t t-foreach="state.recentActivities" t-as="po" t-key="po.id">
                                     <div class="log-item" t-on-click="() => this.openPurchaseOrder(po.id)">
-                                        <div class="log-marker border-#{po.state}"></div>
+                                        <div t-attf-class="log-marker border-#{po.state}"></div>
                                         <div class="log-content">
                                             <div class="log-title"><strong t-esc="po.name"/> Initiated</div>
                                             <div class="log-sub text-muted" t-esc="po.partner_id[1]"/>
@@ -189,9 +339,8 @@
                             </div>
                         </section>
                     </div>
-
                 </div>
             </div>
         </div>
     </t>
-</templates>
+</templates>

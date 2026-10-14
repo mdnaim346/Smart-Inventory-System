@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_report_stock_list" model="ir.actions.report">
+        <field name="name">Smart Inventory Report</field>
+        <field name="model">product.template</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">smart_inventory.report_stock_list</field>
+        <field name="report_file">smart_inventory.report_stock_list</field>
+    </record>
+
+    <template id="report_stock_list">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <div class="page">
+                    <h2 t-out="title"/>
+                    <p class="text-muted">Generated <span t-out="date" t-options="{'widget': 'datetime'}"/></p>
+                    <table class="table table-sm o_main_table">
+                        <thead>
+                            <tr><th t-foreach="headers" t-as="h" t-out="h"/></tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="rows" t-as="row">
+                                <td t-foreach="row" t-as="cell" t-att-class="'text-end' if cell['num'] else ''" t-out="cell['text']"/>
+                            </tr>
+                            <tr class="fw-bold">
+                                <td t-foreach="totals" t-as="cell" t-att-class="'text-end' if cell['num'] else ''" t-out="cell['text']"/>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p t-if="not rows">Nothing to report.</p>
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>

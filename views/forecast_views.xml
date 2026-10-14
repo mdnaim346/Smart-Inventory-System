@@ -1,0 +1,123 @@
+<odoo>
+    <record id="view_forecast_list" model="ir.ui.view">
+        <field name="name">smart.inventory.forecast.list</field>
+        <field name="model">smart.inventory.forecast</field>
+        <field name="arch" type="xml">
+            <list create="0" edit="0">
+                <field name="date"/>
+                <field name="product_tmpl_id"/>
+                <field name="horizon"/>
+                <field name="baseline"/>
+                <field name="predicted"/>
+                <field name="actual"/>
+                <field name="abs_pct_error"/>
+                <field name="source"/>
+                <field name="is_closed" optional="hide"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_forecast_pivot" model="ir.ui.view">
+        <field name="name">smart.inventory.forecast.pivot</field>
+        <field name="model">smart.inventory.forecast</field>
+        <field name="arch" type="xml">
+            <pivot>
+                <field name="product_tmpl_id" type="row"/>
+                <field name="date" interval="week" type="col"/>
+                <field name="abs_pct_error" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_forecast_search" model="ir.ui.view">
+        <field name="name">smart.inventory.forecast.search</field>
+        <field name="model">smart.inventory.forecast</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="product_tmpl_id"/>
+                <filter string="Actual Known" name="closed" domain="[('is_closed', '=', True)]"/>
+                <filter string="AI" name="ai" domain="[('source', '=', 'ai')]"/>
+                <filter string="Baseline" name="baseline" domain="[('source', '=', 'baseline')]"/>
+                <group>
+                    <filter string="Product" name="group_product" context="{'group_by': 'product_tmpl_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_forecast_history" model="ir.actions.act_window">
+        <field name="name">Forecast History</field>
+        <field name="res_model">smart.inventory.forecast</field>
+        <field name="view_mode">list,pivot</field>
+    </record>
+
+    <record id="view_stock_level_list" model="ir.ui.view">
+        <field name="name">smart.inventory.stock.level.list</field>
+        <field name="model">smart.inventory.stock.level</field>
+        <field name="arch" type="xml">
+            <list create="0" editable="bottom">
+                <field name="warehouse_id" readonly="1"/>
+                <field name="product_id" readonly="1"/>
+                <field name="qty_available"/>
+                <field name="usable_qty" optional="hide"/>
+                <field name="forecast"/>
+                <field name="daily_demand" optional="hide"/>
+                <field name="lead_time" optional="hide"/>
+                <field name="safety_stock"/>
+                <field name="reorder_point"/>
+                <field name="min_qty_override"/>
+                <field name="min_level"/>
+                <field name="excess_qty"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_stock_level_search" model="ir.ui.view">
+        <field name="name">smart.inventory.stock.level.search</field>
+        <field name="model">smart.inventory.stock.level</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="product_id"/>
+                <field name="warehouse_id"/>
+                <group>
+                    <filter string="Warehouse" name="group_warehouse" context="{'group_by': 'warehouse_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_stock_levels" model="ir.actions.act_window">
+        <field name="name">Warehouse Stock Levels</field>
+        <field name="res_model">smart.inventory.stock.level</field>
+        <field name="view_mode">list</field>
+        <field name="context">{'search_default_group_warehouse': 1}</field>
+    </record>
+
+    <record id="view_transfer_suggestion_list" model="ir.ui.view">
+        <field name="name">smart.inventory.transfer.suggestion.list</field>
+        <field name="model">smart.inventory.transfer.suggestion</field>
+        <field name="arch" type="xml">
+            <list create="0" edit="0" decoration-muted="state != 'open'">
+                <field name="create_date" string="Suggested On"/>
+                <field name="product_id"/>
+                <field name="source_warehouse_id"/>
+                <field name="dest_warehouse_id"/>
+                <field name="quantity"/>
+                <field name="state" widget="badge"/>
+                <field name="picking_id"/>
+                <button name="action_create_transfer" type="object" string="Create Transfer" icon="fa-truck"
+                        invisible="state != 'open'" groups="smart_inventory.group_smart_inventory_manager"/>
+                <button name="action_cancel" type="object" string="Dismiss" icon="fa-times"
+                        invisible="state != 'open'" groups="smart_inventory.group_smart_inventory_manager"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_transfer_suggestions" model="ir.actions.act_window">
+        <field name="name">Transfer Suggestions</field>
+        <field name="res_model">smart.inventory.transfer.suggestion</field>
+        <field name="view_mode">list</field>
+        <field name="domain">[('state', '=', 'open')]</field>
+    </record>
+</odoo>

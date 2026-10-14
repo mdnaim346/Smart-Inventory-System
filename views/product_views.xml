@@ -4,56 +4,143 @@
         <field name="model">product.template</field>
         <field name="inherit_id" ref="product.product_template_form_view"/>
         <field name="arch" type="xml">
-
             <xpath expr="//sheet/notebook" position="inside">
-                <page string="AI Smart Inventory 🤖" name="ai_inventory">
-                    <header>
-                        <button name="action_generate_ai_insights"
-                                type="object"
-                                string="Generate AI Insight"
-                                class="btn-primary"
-                                icon="fa-magic"/>
-                    </header>
-                    
+                <page string="Smart Inventory" name="ai_inventory" invisible="not is_storable"
+                      groups="smart_inventory.group_smart_inventory_user">
+                    <div class="d-flex gap-2 mb-2">
+                        <button name="action_generate_ai_insights" type="object" string="Refresh Forecast"
+                                class="btn-primary" icon="fa-magic"
+                                groups="smart_inventory.group_smart_inventory_manager"/>
+                        <button name="action_check_and_restock" type="object" string="Restock Now"
+                                class="btn-secondary" icon="fa-refresh"
+                                groups="smart_inventory.group_smart_inventory_manager"/>
+                        <button name="action_open_forecast_chart" type="object" string="Forecast Chart"
+                                class="btn-secondary" icon="fa-line-chart"/>
+                    </div>
+
                     <div class="alert alert-info py-2" role="alert" invisible="not ai_insight">
-                        <i class="fa fa-info-circle mr-2"/>
+                        <i class="fa fa-info-circle me-2" title="Insight"/>
                         <field name="ai_insight" nolabel="1"/>
                     </div>
 
                     <group>
-                        <group string="AI Predictions">
-                            <field name="predicted_demand" widget="base_unit" options="{'type': 'number'}"/>
-                            <field name="risk_level" widget="badge" 
-                                   decoration-danger="risk_level == 'high'" 
-                                   decoration-warning="risk_level == 'medium'" 
+                        <group string="Forecast">
+                            <field name="predicted_demand"/>
+                            <field name="avg_daily_demand"/>
+                            <field name="risk_level" widget="badge"
+                                   decoration-danger="risk_level == 'high'"
+                                   decoration-warning="risk_level == 'medium'"
                                    decoration-success="risk_level == 'low'"/>
+                            <field name="forecast_source"/>
+                            <field name="forecast_mape"/>
                             <field name="last_ai_update" readonly="1"/>
                         </group>
-                        
                         <group string="Configuration">
-                            <field name="low_stock_threshold"/>
-                            <field name="restock_quantity"/>
+                            <field name="reorder_mode"/>
+                            <field name="low_stock_threshold" invisible="reorder_mode != 'manual'"/>
+                            <field name="restock_quantity" invisible="reorder_mode != 'manual'"/>
                             <field name="auto_restock" widget="boolean_toggle"/>
                             <field name="preferred_vendor_id"/>
                         </group>
                     </group>
 
-                    <group string="Stock Status">
-                        <field name="qty_available"/>
-                        <field name="forecast_shortage" invisible="forecast_shortage == 0"/>
-                        <field name="is_low_stock" widget="boolean_toggle"/>
+                    <group>
+                        <group string="Stock Status">
+                            <field name="qty_available"/>
+                            <field name="usable_qty"/>
+                            <field name="min_stock_level"/>
+                            <field name="forecast_shortage" invisible="forecast_shortage == 0"/>
+                            <field name="is_low_stock"/>
+                            <field name="days_of_cover"/>
+                        </group>
+                        <group string="Replenishment">
+                            <field name="safety_stock"/>
+                            <field name="reorder_point"/>
+                            <field name="abc_class"/>
+                            <field name="xyz_class"/>
+                            <field name="last_sale_date"/>
+                            <field name="is_dead_stock"/>
+                        </group>
                     </group>
-
-                    <footer>
-                        <button name="action_check_and_restock"
-                                type="object"
-                                string="Manual AI Restock"
-                                class="btn-secondary"
-                                icon="fa-refresh"/>
-                    </footer>
                 </page>
             </xpath>
+        </field>
+    </record>
 
+    <record id="view_product_list_smart" model="ir.ui.view">
+        <field name="name">product.template.list.smart.inventory</field>
+        <field name="model">product.template</field>
+        <field name="priority">90</field>
+        <field name="arch" type="xml">
+            <list string="Smart Inventory" create="0">
+                <field name="name"/>
+                <field name="categ_id" optional="show"/>
+                <field name="qty_available"/>
+                <field name="usable_qty" optional="hide"/>
+                <field name="min_stock_level"/>
+                <field name="forecast_shortage"/>
+                <field name="predicted_demand"/>
+                <field name="days_of_cover" optional="show"/>
+                <field name="risk_level" widget="badge"
+                       decoration-danger="risk_level == 'high'"
+                       decoration-warning="risk_level == 'medium'"
+                       decoration-success="risk_level == 'low'"/>
+                <field name="abc_class" optional="show"/>
+                <field name="xyz_class" optional="hide"/>
+                <field name="si_stock_value" optional="hide" sum="Total"/>
+                <field name="last_sale_date" optional="hide"/>
+                <field name="is_dead_stock" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="product_template_search_smart" model="ir.ui.view">
+        <field name="name">product.template.search.smart.inventory</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_search_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='favorites']" position="before">
+                <filter string="Low Stock" name="si_low_stock" domain="[('is_low_stock', '=', True)]"/>
+                <filter string="High Risk" name="si_high_risk" domain="[('risk_level', '=', 'high')]"/>
+                <filter string="Dead Stock" name="si_dead_stock" domain="[('is_dead_stock', '=', True)]"/>
+                <separator/>
+            </xpath>
+            <xpath expr="//search" position="inside">
+                <group>
+                    <filter string="ABC Class" name="groupby_abc" context="{'group_by': 'abc_class'}"/>
+                    <filter string="XYZ Class" name="groupby_xyz" context="{'group_by': 'xyz_class'}"/>
+                    <filter string="Risk Level" name="groupby_risk" context="{'group_by': 'risk_level'}"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="action_products_at_risk" model="ir.actions.act_window">
+        <field name="name">Products at Risk</field>
+        <field name="res_model">product.template</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_product_list_smart"/>
+        <field name="domain">[('is_storable', '=', True)]</field>
+        <field name="context">{'search_default_si_low_stock': 1}</field>
+    </record>
+
+    <record id="action_dead_stock" model="ir.actions.act_window">
+        <field name="name">Dead and Slow-Moving Stock</field>
+        <field name="res_model">product.template</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_product_list_smart"/>
+        <field name="domain">[('is_storable', '=', True)]</field>
+        <field name="context">{'search_default_si_dead_stock': 1}</field>
+    </record>
+
+    <record id="product_supplierinfo_tree_view_smart" model="ir.ui.view">
+        <field name="name">product.supplierinfo.list.smart.inventory</field>
+        <field name="model">product.supplierinfo</field>
+        <field name="inherit_id" ref="product.product_supplierinfo_tree_view"/>
+        <field name="arch" type="xml">
+            <field name="min_qty" position="after">
+                <field name="si_pack_multiple" optional="hide"/>
+            </field>
         </field>
     </record>
 </odoo>

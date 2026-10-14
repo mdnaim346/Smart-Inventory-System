@@ -522,3 +522,68 @@ body:has(.smart-dashboard-premium) .o_content {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+/* ---------- Filters, KPIs, exports (E4.1, E4.3, E4.5) ---------- */
+.si-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+}
+.si-filter-bar label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--nebula-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.si-filter-bar select {
+    min-width: 9rem;
+    padding: 0.35rem 0.5rem;
+    border-radius: 8px;
+    border: 1px solid var(--nebula-glass-border);
+    background: var(--nebula-card-bg);
+    color: var(--nebula-text-main);
+}
+.si-export {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+    font-size: 0.75rem;
+    color: var(--nebula-text-dim);
+}
+.si-kpi-row {
+    grid-template-columns: repeat(4, 1fr);
+}
+.si-kpi-row .metric-card {
+    padding: 1.25rem;
+}
+.si-kpi-row .metric-value {
+    font-size: 1.5rem;
+}
+.btn-icon-only {
+    background: transparent;
+    border: none;
+    color: var(--nebula-text-dim);
+    padding: 0.25rem 0.4rem;
+}
+.btn-icon-only:hover {
+    color: var(--nebula-primary);
+}
+
+/* ---------- Forecast chart (E4.2) ---------- */
+.si-chart-box {
+    position: relative;
+    height: 60vh;
+    min-height: 320px;
+}
+@media (max-width: 992px) {
+    .si-kpi-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
