@@ -1,0 +1,188 @@
+[
+  {
+    "serial": "E1.1",
+    "number": 5,
+    "url": "https://github.com/mdnaim346/Smart-Inventory-System/issues/5",
+    "epic": 4
+  },
+  {
+    "serial": "E1.2",
+    "number": 6,
+    "url": "https://github.com/mdnaim346/Smart-Inventory-System/issues/6",
+    "epic": 4
+  },
+  {
+    "serial": "E1.3",
+    "number": 7,
+    "url": "https://github.com/mdnaim346/Smart-Inventory-System/issues/7",
+    "epic": 4
+  },
+  {
+    "serial": "E1.4",
+    "number": 8,
+    "url": "https://github.com/mdnaim346/Smart-Inventory-System/issues/8",
+    "epic": 4
+  },
+  {
+    "serial": "E1.5",
+    "number": 9,
+    "url": "https://github.com/mdnaim346/Smart-Inventory-System/issues/9",
+    "epic": 4
+  },
+  {
+    "serial": "E1",
+    "number": 4,
+    "url": "https://github.com/mdnaim346/Smart-Inventory-System/issues/4",
+    "points": 13
+  },
+  {
+    "serial": "E2.1",
+    "number": 11,
+    "url": "https://github.com/mdnaim346/Smart-Inventory-System/issues/11",
+    "epic": 10
+  },
+  {
+    "serial": "E2.2",
+    "number": 12,
+    "url": "https://github.com/mdnaim346/Smart-Inventory-System/issues/12",
+    "epic": 10
+  },
+  {
+    "serial": "E2.3",
+    "number": 13,
+    "url": "https://github.com/mdnaim346/Smart-Inventory-System/issues/13",
+    "epic": 10
+  },
+  {
+    "serial": "E2.4",
+    "number": 14,
+    "url": "https://github.com/mdnaim346/Smart-Inventory-System/issues/14",
+    "epic": 10
+  },
+  {
+    "serial": "E2.5",
+    "number": 15,
+    "url": "https://github.com/mdnaim346/Smart-Inventory-System/issues/15",
+    "epic": 10
+  },
+  {
+    "serial": "E2.6",
+    "number": 16,
+    "url": "https://github.com/mdnaim346/Smart-Inventory-System/issues/16",
+    "epic": 10
+  },
+  {
+    "serial": "E2",
+    "number": 10,
+    "url": "https://github.com/mdnaim346/Smart-Inventory-System/issues/10",
+    "points": 15
+  },
+  {
+    "serial": "E3.1",
+    "number": 18,
+    "url": "https://github.com/mdnaim346/Smart-Inventory-System/issues/18",
+    "epic": 17
+  },
+  {
+    "serial": "E3.2",
+    "number": 19,
+    "url": "https://github.com/mdnaim346/Smart-Inventory-System/issues/19",
+    "epic": 17
+  },
+  {
+    "serial": "E3.3",
+    "number": 20,
+    "url": "https://github.com/mdnaim346/Smart-Inventory-System/issues/20",
+    "epic": 17
+  },
+  {
+    "serial": "E3.4",
+    "number": 21,
+    "url": "https://github.com/mdnaim346/Smart-Inventory-System/issues/21",
+    "epic": 17
+  },
+  {
+    "serial": "E3.5",
+    "number": 22,
+    "url": "https://github.com/mdnaim346/Smart-Inventory-System/issues/22",
+    "epic": 17
+  },
+  {
+    "serial": "E3",
+    "number": 17,
+    "url": "https://github.com/mdnaim346/Smart-Inventory-System/issues/17",
+    "points": 15
+  },
+  {
+    "serial": "E4.1",
+    "number": 24,
+    "url": "https://github.com/mdnaim346/Smart-Inventory-System/issues/24",
+    "epic": 23
+  },
+  {
+    "serial": "E4.2",
+    "number": 25,
+    "url": "https://github.com/mdnaim346/Smart-Inventory-System/issues/25",
+    "epic": 23
+  },
+  {
+    "serial": "E4.3",
+    "number": 26,
+    "url": "https://github.com/mdnaim346/Smart-Inventory-System/issues/26",
+    "epic": 23
+  },
+  {
+    "serial": "E4.4",
+    "number": 27,
+    "url": "https://github.com/mdnaim346/Smart-Inventory-System/issues/27",
+    "epic": 23
+  },
+  {
+    "serial": "E4.5",
+    "number": 28,
+    "url": "https://github.com/mdnaim346/Smart-Inventory-System/issues/28",
+    "epic": 23
+  },
+  {
+    "serial": "E4",
+    "number": 23,
+    "url": "https://github.com/mdnaim346/Smart-Inventory-System/issues/23",
+    "points": 12
+  },
+  {
+    "serial": "E5.1",
+    "number": 30,
+    "url": "https://github.com/mdnaim346/Smart-Inventory-System/issues/30",
+    "epic": 29
+  },
+  {
+    "serial": "E5.2",
+    "number": 31,
+    "url": "https://github.com/mdnaim346/Smart-Inventory-System/issues/31",
+    "epic": 29
+  },
+  {
+    "serial": "E5.3",
+    "number": 32,
+    "url": "https://github.com/mdnaim346/Smart-Inventory-System/issues/32",
+    "epic": 29
+  },
+  {
+    "serial": "E5.4",
+    "number": 33,
+    "url": "https://github.com/mdnaim346/Smart-Inventory-System/issues/33",
+    "epic": 29
+  },
+  {
+    "serial": "E5.5",
+    "number": 34,
+    "url": "https://github.com/mdnaim346/Smart-Inventory-System/issues/34",
+    "epic": 29
+  },
+  {
+    "serial": "E5",
+    "number": 29,
+    "url": "https://github.com/mdnaim346/Smart-Inventory-System/issues/29",
+    "points": 12
+  }
+]
