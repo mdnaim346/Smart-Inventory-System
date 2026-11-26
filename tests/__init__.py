@@ -7,3 +7,4 @@ from . import test_security
 from . import test_ui
 from . import test_review_fixes
 from . import test_ai_provider
+from . import test_dashboard_action
