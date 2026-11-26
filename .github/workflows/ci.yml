@@ -46,13 +46,18 @@ jobs:
       - name: System packages
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libldap2-dev libsasl2-dev
       - name: Python packages
-        run: pip install -r odoo/requirements.txt
+        run: pip install -r odoo/requirements.txt coverage
       - name: Install and test smart_inventory
         run: |
-          python odoo/odoo-bin \
+          # OLD: tests ran without coverage measurement
+          # python odoo/odoo-bin \
+          coverage run --source=addons/smart_inventory/models odoo/odoo-bin \
             --addons-path=odoo/addons,addons \
             --db_host=localhost --db_user=odoo --db_password=odoo \
             -d ci_smart_inventory -i smart_inventory,product_expiry \
             --test-tags /smart_inventory \
             --stop-after-init --log-level=test 2>&1 | tee odoo.log
           ! grep -E "(ERROR|CRITICAL) ci_smart_inventory" odoo.log
+          grep -E "0 failed, 0 error\(s\) of [0-9]+ tests" odoo.log
+      - name: Coverage of models (at least 70%)
+        run: coverage report --fail-under=70

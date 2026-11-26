@@ -9,3 +9,5 @@ from . import test_review_fixes
 from . import test_ai_provider
 from . import test_dashboard_action
 from . import test_inventory_ops
+from . import test_issue_criteria
+from . import test_stock_status
