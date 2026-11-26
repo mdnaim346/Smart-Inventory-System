@@ -34,6 +34,10 @@ export class InventoryDashboard extends Component {
             expiringLots: [],
             transferSuggestions: [],
             isManager: false,
+            overstockCount: 0,
+            cycleCountsDue: 0,
+            savings: {},
+            suggestions: { count: 0, rows: [] },
         });
 
         onWillStart(async () => {
@@ -175,6 +179,21 @@ export class InventoryDashboard extends Component {
 
     async rejectPurchaseOrder(poId) {
         const action = await this.orm.call("purchase.order", "action_si_reject", [[poId]]);
+        await this.action.doAction(action, { onClose: () => this.loadData() });
+    }
+
+    openAction(xmlId) {
+        this.action.doAction(xmlId);
+    }
+
+    async approveSuggestion(suggestionId) {
+        await this.orm.call("smart.inventory.suggestion", "action_approve", [[suggestionId]]);
+        this.notification.add("Suggestion approved and added to the purchase order.", { type: "success" });
+        await this.loadData();
+    }
+
+    async rejectSuggestion(suggestionId) {
+        const action = await this.orm.call("smart.inventory.suggestion", "action_reject", [[suggestionId]]);
         await this.action.doAction(action, { onClose: () => this.loadData() });
     }
 

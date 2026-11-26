@@ -77,14 +77,20 @@ class SmartInventoryForecastEngine(models.AbstractModel):
     # Baseline forecast (E1.3)
     # ------------------------------------------------------------------
     @api.model
-    def _baseline(self, sales_by_day, horizon, end=None):
+    def _baseline(self, sales_by_day, horizon, end=None, day_factors=None):
         """Weighted moving average with a day-of-week factor.
 
         :param sales_by_day: {date: qty} for at least the last 90 days
+        :param day_factors: {date: demand multiplier} of seasons and promotions. Past
+            days are divided by it (an earlier Eid does not inflate the baseline),
+            forecast days are multiplied by it.
         :return: dict(forecast=total over horizon, daily=avg daily demand,
                       sigma=std dev of daily demand (30 days))
         """
         end = end or self._today()
+        day_factors = day_factors or {}
+        if day_factors:
+            sales_by_day = {day: qty / (day_factors.get(day) or 1.0) for day, qty in sales_by_day.items()}
         series90 = self._series(sales_by_day, 90, end)
         daily = sum(w * (sum(series90[-n:]) / n) for n, w in WINDOW_WEIGHTS)
         sigma = pstdev(series90[-30:]) if any(series90[-30:]) else 0.0
@@ -98,6 +104,7 @@ class SmartInventoryForecastEngine(models.AbstractModel):
             dow: ((sum(v) / len(v)) / mean if mean else 1.0) for dow, v in by_dow.items()
         }
         forecast = sum(daily * factors.get((end + timedelta(days=d)).weekday(), 1.0)
+                       * day_factors.get(end + timedelta(days=d), 1.0)
                        for d in range(horizon))
         return {"forecast": forecast, "daily": daily, "sigma": sigma}
 

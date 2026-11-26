@@ -589,3 +589,89 @@ body:has(.smart-dashboard-premium) .o_content {
         grid-template-columns: repeat(2, 1fr);
     }
 }
+
+/* ---------- Money row, inbox, heading ---------- */
+.si-money-row {
+    grid-template-columns: repeat(4, 1fr);
+}
+.si-clickable {
+    cursor: pointer;
+}
+.ai-header-premium h3 {
+    color: #ffffff !important;
+}
+.si-reason {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-top: 0.25rem;
+}
+
+/* ---------- Phone and small tablet ---------- */
+@media (max-width: 768px) {
+    .smart-dashboard-premium {
+        padding: 0.75rem !important;
+    }
+    .glass-header {
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        padding: 1rem;
+    }
+    .glass-header .top-actions {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    .glass-header .system-status {
+        display: none;
+    }
+    .si-filter-bar {
+        flex-wrap: wrap;
+    }
+    .si-filter-bar label {
+        flex: 1 1 45%;
+    }
+    .si-filter-bar select {
+        width: 100%;
+    }
+    .si-export {
+        flex-wrap: wrap;
+        margin-left: 0 !important;
+    }
+    .metrics-row,
+    .si-kpi-row,
+    .si-money-row {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+    }
+    .metric-card {
+        padding: 1rem;
+    }
+    .metric-card .metric-icon {
+        display: none;
+    }
+    .metric-value {
+        font-size: 1.25rem !important;
+    }
+    .section-header {
+        padding: 1rem;
+    }
+    .table-container {
+        overflow-x: auto;
+    }
+    .nebula-table {
+        min-width: 640px;
+    }
+}
+
+@media (max-width: 420px) {
+    .metrics-row,
+    .si-kpi-row,
+    .si-money-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Wide tables scroll inside their card instead of widening the column. */
+.dashboard-left,
+.dashboard-right {
+    min-width: 0;
+}

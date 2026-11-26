@@ -1,0 +1,26 @@
+<odoo noupdate="1">
+    <record id="reason_count_error" model="smart.inventory.adjustment.reason">
+        <field name="name">Counting error</field>
+        <field name="sequence">1</field>
+    </record>
+    <record id="reason_damaged" model="smart.inventory.adjustment.reason">
+        <field name="name">Damaged</field>
+        <field name="sequence">2</field>
+    </record>
+    <record id="reason_expired" model="smart.inventory.adjustment.reason">
+        <field name="name">Expired</field>
+        <field name="sequence">3</field>
+    </record>
+    <record id="reason_theft" model="smart.inventory.adjustment.reason">
+        <field name="name">Theft or loss</field>
+        <field name="sequence">4</field>
+    </record>
+    <record id="reason_found" model="smart.inventory.adjustment.reason">
+        <field name="name">Found stock</field>
+        <field name="sequence">5</field>
+    </record>
+    <record id="reason_sample" model="smart.inventory.adjustment.reason">
+        <field name="name">Sample or gift</field>
+        <field name="sequence">6</field>
+    </record>
+</odoo>

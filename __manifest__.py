@@ -1,6 +1,6 @@
 {
     "name": "AI-Powered Smart Inventory",
-    "version": "19.0.3.1.0",
+    "version": "19.0.3.2.0",
     "summary": "Demand forecasting, smart replenishment and stock health, with optional Claude AI",
     "description": """
 Smart Inventory tells you what to buy, how much, from whom and when, explains why,
@@ -15,6 +15,12 @@ and prepares the purchase orders and transfers for your approval.
 * Dead stock, lot expiry, ABC/XYZ classes
 * KPI dashboard, forecast chart, XLSX/PDF exports, daily risk e-mail digest
 * Configurable sales automation: block out-of-stock sales, auto delivery, auto invoice
+* Restock suggestions inbox (approve, edit, reject with reason) and a weekly restock budget
+* Seasons and promotions in the forecast; new products forecast like a similar product
+* Vendor scorecard, overstock alerts, lost-sales log and a money view on the dashboard
+* ABC cycle counting, stock adjustment reasons and report, First Expired First Out picking
+* Dead stock actions: discount, return to vendor, move to another warehouse
+* Telegram and webhook (WhatsApp or SMS gateway) alerts
 """,
     "author": "Naim Reza",
     "maintainer": "Naim Reza",
@@ -31,12 +37,14 @@ and prepares the purchase orders and transfers for your approval.
         "security/ir.model.access.csv",
         "data/cron.xml",
         "data/mail_template.xml",
+        "data/adjustment_reasons.xml",
         "report/reports.xml",
         "views/product_views.xml",
         "views/forecast_views.xml",
         "views/purchase_views.xml",
         "views/res_config_settings_views.xml",
         "views/dashboard_views.xml",
+        "views/inventory_ops_views.xml",
         "views/menu.xml",
     ],
     "demo": [

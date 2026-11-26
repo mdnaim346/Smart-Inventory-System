@@ -1,4 +1,4 @@
-from odoo import api, fields, models
+from odoo import api, fields, models, _
 
 PARAM = "smart_inventory."
 
@@ -67,6 +67,17 @@ class ResConfigSettings(models.TransientModel):
     si_service_level_c = fields.Float(string="Service Level C (%)", default=90.0, config_parameter=PARAM + "service_level_c")
     si_target_cover_days = fields.Integer(
         string="Target Days of Cover", default=14, config_parameter=PARAM + "target_cover_days")
+    si_order_qty_mode = fields.Selection(
+        [("cover", "Target days of cover"), ("eoq", "Economic order quantity (EOQ)")],
+        string="Order Quantity", default="cover", config_parameter=PARAM + "order_qty_mode",
+        help="Computed reorder mode: order up to the days of cover, or at least the economic order "
+             "quantity that balances ordering and holding cost.")
+    si_order_cost = fields.Float(
+        string="Cost per Order", default=500.0, config_parameter=PARAM + "order_cost",
+        help="Paperwork, transport and handling for one purchase order (company currency).")
+    si_holding_cost_pct = fields.Float(
+        string="Holding Cost (% per year)", default=20.0, config_parameter=PARAM + "holding_cost_pct",
+        help="Yearly cost of keeping one unit, as a percentage of its cost: storage, capital, spoilage.")
     si_po_approval_amount = fields.Float(
         string="Approval Above Amount", config_parameter=PARAM + "po_approval_amount",
         help="Smart restock POs above this untaxed amount need a Smart Inventory Manager's approval. 0 disables approval.")
@@ -80,6 +91,51 @@ class ResConfigSettings(models.TransientModel):
     # Alerts
     si_digest_user_ids = fields.Many2many(
         related="company_id.si_digest_user_ids", readonly=False, string="Daily Digest Recipients")
+    si_telegram_token = fields.Char(
+        string="Telegram Bot Token", config_parameter=PARAM + "telegram_token", groups="base.group_system")
+    si_telegram_chat_id = fields.Char(string="Telegram Chat ID", config_parameter=PARAM + "telegram_chat_id")
+    si_alert_webhook_url = fields.Char(
+        string="Alert Webhook URL", config_parameter=PARAM + "alert_webhook_url", groups="base.group_system",
+        help="Alerts are POSTed here as JSON {\"text\": ...}. Use it for a WhatsApp or SMS gateway.")
+
+    # Purchasing control
+    si_restock_review = fields.Boolean(
+        string="Review Suggestions Before Ordering", config_parameter=PARAM + "restock_review",
+        help="Restock creates suggestions that a manager approves, edits or rejects, "
+             "instead of adding lines to purchase orders directly.")
+    si_weekly_budget = fields.Float(
+        string="Weekly Restock Budget", config_parameter=PARAM + "weekly_budget",
+        help="Untaxed amount of smart restock orders per week (company currency). "
+             "Needs above the budget become suggestions. 0 = no budget.")
+    si_overstock_days = fields.Integer(
+        string="Overstock Above (days of cover)", default=120, config_parameter=PARAM + "overstock_days")
+
+    # Counting
+    si_cycle_count = fields.Boolean(
+        string="ABC Cycle Counting", config_parameter=PARAM + "cycle_count",
+        help="Schedule stock counts by ABC class: A products more often than C products.")
+    si_cycle_days_a = fields.Integer(string="Count A Every (days)", default=30, config_parameter=PARAM + "cycle_days_a")
+    si_cycle_days_b = fields.Integer(string="Count B Every (days)", default=90, config_parameter=PARAM + "cycle_days_b")
+    si_cycle_days_c = fields.Integer(string="Count C Every (days)", default=180, config_parameter=PARAM + "cycle_days_c")
+    si_require_adjust_reason = fields.Boolean(
+        string="Require Adjustment Reason", config_parameter=PARAM + "require_adjust_reason",
+        help="A stock count that changes the quantity must have a reason (damaged, expired, theft...).")
+    si_fefo = fields.Boolean(
+        string="First Expired, First Out", config_parameter=PARAM + "fefo",
+        help="Pick lots that expire first for products with expiration dates (needs Product Expiry).")
+
+    def set_values(self):
+        super().set_values()
+        if self.si_fefo:
+            self.env["product.template"]._si_apply_fefo()
+
+    def action_si_test_alert(self):
+        self.execute()
+        sent = self.env["smart.inventory.alert"]._send(_("Smart Inventory test alert from %s.", self.env.company.name))
+        return {"type": "ir.actions.client", "tag": "display_notification", "params": {
+            "type": "success" if sent else "warning",
+            "message": _("Test alert sent.") if sent else _("No alert channel is configured, or sending failed."),
+        }}
 
 
 class SmartInventoryConfig(models.AbstractModel):
@@ -102,8 +158,23 @@ class SmartInventoryConfig(models.AbstractModel):
         "service_level_c": 90.0,
         "target_cover_days": 14,
         "po_approval_amount": 0.0,
+        "order_qty_mode": "cover",
+        "order_cost": 500.0,
+        "holding_cost_pct": 20.0,
         "dead_stock_days": 90,
         "expiry_alert_days": 30,
+        "telegram_token": "",
+        "telegram_chat_id": "",
+        "alert_webhook_url": "",
+        "restock_review": False,
+        "weekly_budget": 0.0,
+        "overstock_days": 120,
+        "cycle_count": False,
+        "cycle_days_a": 30,
+        "cycle_days_b": 90,
+        "cycle_days_c": 180,
+        "require_adjust_reason": False,
+        "fefo": False,
     }
 
     @api.model

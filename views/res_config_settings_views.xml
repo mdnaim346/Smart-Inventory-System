@@ -49,6 +49,13 @@
                         <setting help="Order enough stock for this many days of demand (computed reorder mode)">
                             <field name="si_target_cover_days"/>
                         </setting>
+                        <setting help="Computed reorder mode: days of cover, or at least the economic order quantity">
+                            <field name="si_order_qty_mode"/>
+                            <div class="mt-2" invisible="si_order_qty_mode != 'eoq'">
+                                <div><label for="si_order_cost"/> <field name="si_order_cost" class="oe_inline"/></div>
+                                <div><label for="si_holding_cost_pct"/> <field name="si_holding_cost_pct" class="oe_inline"/></div>
+                            </div>
+                        </setting>
                         <setting help="Probability of not running out during the vendor lead time">
                             <field name="si_service_level"/>
                             <div class="mt-2">
@@ -70,6 +77,41 @@
                         </setting>
                         <setting company_dependent="1" help="Users who receive the daily risk digest (default: Smart Inventory Managers)">
                             <field name="si_digest_user_ids" widget="many2many_tags"/>
+                        </setting>
+                        <setting help="Products with more days of cover than this are overstock (cash tied up)">
+                            <field name="si_overstock_days"/>
+                        </setting>
+                        <setting string="Chat Alerts" help="Send new high-risk products and the daily summary to Telegram, or to a WhatsApp or SMS gateway through a webhook">
+                            <div class="mt-2">
+                                <div groups="base.group_system"><label for="si_telegram_token"/> <field name="si_telegram_token" password="True" class="oe_inline"/></div>
+                                <div><label for="si_telegram_chat_id"/> <field name="si_telegram_chat_id" class="oe_inline"/></div>
+                                <div groups="base.group_system"><label for="si_alert_webhook_url"/> <field name="si_alert_webhook_url" class="oe_inline" placeholder="https://..."/></div>
+                                <button name="action_si_test_alert" type="object" string="Send Test Alert" icon="fa-paper-plane" class="btn-link"/>
+                            </div>
+                        </setting>
+                    </block>
+                    <block title="Purchasing Control" name="si_purchasing">
+                        <setting help="Restock needs wait in Replenishment, Suggestions to Review, for a manager to approve, edit or reject">
+                            <field name="si_restock_review"/>
+                        </setting>
+                        <setting help="Smart restock orders per week (untaxed, company currency). Highest risks are ordered first; the rest become suggestions. 0 = no budget">
+                            <field name="si_weekly_budget"/>
+                        </setting>
+                    </block>
+                    <block title="Stock Counting" name="si_counting">
+                        <setting help="Schedule counts by ABC class in Products, Cycle Count">
+                            <field name="si_cycle_count"/>
+                            <div class="mt-2" invisible="not si_cycle_count">
+                                <div><label for="si_cycle_days_a"/> <field name="si_cycle_days_a" class="oe_inline"/></div>
+                                <div><label for="si_cycle_days_b"/> <field name="si_cycle_days_b" class="oe_inline"/></div>
+                                <div><label for="si_cycle_days_c"/> <field name="si_cycle_days_c" class="oe_inline"/></div>
+                            </div>
+                        </setting>
+                        <setting help="Counts that change the quantity need a reason: damaged, expired, theft...">
+                            <field name="si_require_adjust_reason"/>
+                        </setting>
+                        <setting help="Pick the lots that expire first (products with expiration dates, needs Product Expiry)">
+                            <field name="si_fefo"/>
                         </setting>
                     </block>
                 </app>

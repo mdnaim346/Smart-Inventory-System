@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 from odoo.tools import float_compare
@@ -58,11 +60,18 @@ class SmartInventoryStockLevel(models.Model):
         existing = {(lvl.product_id.id, lvl.warehouse_id.id): lvl for lvl in self.search([
             ("product_id", "in", variants.ids), ("warehouse_id", "in", warehouses.ids)])}
         lead_times = {v.id: v._si_lead_time() for v in variants}
+        Event = self.env["smart.inventory.demand.event"]
+        window = (today - timedelta(days=90), today + timedelta(days=horizon))
+        events = Event._events_between(*window)
+        day_factors = {t.id: Event._day_factors(t, *window, events=events) if events else {}
+                       for t in variants.product_tmpl_id}
         to_create = []
         for warehouse in warehouses:
             sales = engine._daily_sales(variants, 90, warehouse=warehouse)
+            sales = variants.product_tmpl_id._si_borrowed_sales(sales, warehouse=warehouse, end=today)
             for variant in variants:
-                stats = engine._baseline(sales.get(variant.id, {}), horizon, end=today)
+                stats = engine._baseline(sales.get(variant.id, {}), horizon, end=today,
+                                         day_factors=day_factors[variant.product_tmpl_id.id])
                 lead = lead_times[variant.id]
                 reorder_point, safety = engine._reorder_point(
                     stats["daily"], stats["sigma"], lead, variant.product_tmpl_id._si_service_level())

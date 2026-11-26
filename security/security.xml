@@ -38,4 +38,28 @@
         <field name="model_id" ref="model_smart_inventory_transfer_suggestion"/>
         <field name="domain_force">[('company_id', 'in', company_ids)]</field>
     </record>
+
+    <record id="rule_suggestion_company" model="ir.rule">
+        <field name="name">Smart Inventory Suggestion: multi-company</field>
+        <field name="model_id" ref="model_smart_inventory_suggestion"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="rule_vendor_score_company" model="ir.rule">
+        <field name="name">Smart Inventory Vendor Score: multi-company</field>
+        <field name="model_id" ref="model_smart_inventory_vendor_score"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="rule_stockout_company" model="ir.rule">
+        <field name="name">Smart Inventory Stockout: multi-company</field>
+        <field name="model_id" ref="model_smart_inventory_stockout"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="rule_demand_event_company" model="ir.rule">
+        <field name="name">Smart Inventory Demand Event: multi-company</field>
+        <field name="model_id" ref="model_smart_inventory_demand_event"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+    </record>
 </odoo>

@@ -7,3 +7,8 @@ from . import purchase_order
 from . import sale_order
 from . import dashboard
 from . import digest
+from . import demand_event
+from . import suggestion
+from . import vendor_score
+from . import inventory_ops
+from . import alert

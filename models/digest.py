@@ -40,7 +40,14 @@ class SmartInventoryDigest(models.AbstractModel):
         mails = self.env["mail.mail"]
         for company in self.env["res.company"].search([]):
             products, orders = self._digest_content(company)
-            if not products and not orders:
+            suggestions = self.env["smart.inventory.suggestion"].sudo().search_count(
+                [("state", "=", "new"), ("company_id", "=", company.id)])
+            if products:
+                self.env["smart.inventory.alert"]._send_digest(company, products, orders, suggestions)
+            # OLD: also e-mailed on days without risk when restock POs were pending
+            # if not products and not orders:
+            #     continue
+            if not products:
                 continue
             recipients = self._recipients(company)
             if not recipients:

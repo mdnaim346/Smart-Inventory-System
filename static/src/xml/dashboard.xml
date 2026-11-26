@@ -144,6 +144,46 @@
                             </div>
                         </section>
 
+                        <!-- Money view -->
+                        <section class="metrics-row si-kpi-row si-money-row">
+                            <div class="metric-card glass-morph si-clickable" t-on-click="() => this.openAction('smart_inventory.action_stockouts')">
+                                <div class="metric-content">
+                                    <span class="metric-label">Sales Lost to Stockouts</span>
+                                    <h2 class="metric-value text-danger"><t t-esc="state.kpis.currency"/> <t t-esc="formatNumber(state.savings.lostSales)"/></h2>
+                                    <div class="metric-trend neutral">last <t t-esc="state.kpis.periodDays"/> days</div>
+                                </div>
+                            </div>
+                            <div class="metric-card glass-morph si-clickable" t-on-click="() => this.openAction('smart_inventory.action_overstock')">
+                                <div class="metric-content">
+                                    <span class="metric-label">Cash Tied Up</span>
+                                    <h2 class="metric-value text-warning"><t t-esc="state.kpis.currency"/> <t t-esc="formatNumber(state.savings.tiedUp)"/></h2>
+                                    <div class="metric-trend neutral"><t t-esc="state.overstockCount"/> overstock, <t t-esc="state.deadStockCount"/> dead</div>
+                                </div>
+                            </div>
+                            <div class="metric-card glass-morph">
+                                <div class="metric-content">
+                                    <span class="metric-label">Saved by Transfers</span>
+                                    <h2 class="metric-value text-success"><t t-esc="state.kpis.currency"/> <t t-esc="formatNumber(state.savings.savedByTransfers)"/></h2>
+                                    <div class="metric-trend neutral">instead of buying</div>
+                                </div>
+                            </div>
+                            <div class="metric-card glass-morph">
+                                <div class="metric-content">
+                                    <t t-if="state.savings.budgetLeft !== null and state.savings.budgetLeft !== undefined">
+                                        <span class="metric-label">Budget Left (week)</span>
+                                        <h2 class="metric-value"><t t-esc="state.kpis.currency"/> <t t-esc="formatNumber(state.savings.budgetLeft)"/></h2>
+                                    </t>
+                                    <t t-else="">
+                                        <span class="metric-label">Forecast Error</span>
+                                        <h2 class="metric-value"><t t-if="state.savings.forecastError !== null and state.savings.forecastError !== undefined"><t t-esc="state.savings.forecastError"/>%</t><t t-else="">—</t></h2>
+                                    </t>
+                                    <div class="metric-trend neutral si-clickable" t-on-click="() => this.openAction('smart_inventory.action_cycle_count')">
+                                        <t t-esc="state.cycleCountsDue"/> counts due
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
                         <!-- Shortages -->
                         <section class="data-section glass-morph mt-4">
                             <div class="section-header">
@@ -272,6 +312,30 @@
                                         <p>No recommendations right now.</p>
                                     </div>
                                 </t>
+                            </div>
+                        </section>
+
+                        <!-- Suggestions inbox -->
+                        <section t-if="state.suggestions.count" class="logs-panel glass-morph mb-4">
+                            <div class="section-header">
+                                <h3><i class="fa fa-inbox"/> Suggestions to Review (<t t-esc="state.suggestions.count"/>)</h3>
+                                <button class="btn-mini-action" t-on-click="() => this.openAction('smart_inventory.action_suggestions')">OPEN</button>
+                            </div>
+                            <div class="log-stream">
+                                <div t-foreach="state.suggestions.rows" t-as="sg" t-key="sg.id" class="log-item">
+                                    <div class="log-content">
+                                        <div class="log-title">
+                                            <span t-attf-class="risk-indicator risk-#{sg.risk_level || 'low'} me-2"></span>
+                                            <strong t-esc="sg.product_id[1]"/> — <t t-esc="formatNumber(sg.quantity)"/>
+                                        </div>
+                                        <div class="log-sub text-muted"><t t-esc="sg.vendor_id[1]"/> · <t t-esc="state.kpis.currency"/> <t t-esc="formatNumber(sg.amount)"/><t t-if="sg.over_budget"> · over budget</t></div>
+                                        <div class="log-sub si-reason" t-esc="sg.reason"/>
+                                        <div t-if="state.isManager" class="log-footer">
+                                            <button class="btn-mini-action" t-on-click="() => this.approveSuggestion(sg.id)">APPROVE</button>
+                                            <button class="btn-mini-action" t-on-click="() => this.rejectSuggestion(sg.id)">REJECT</button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </section>
 

@@ -41,6 +41,7 @@
                             <field name="restock_quantity" invisible="reorder_mode != 'manual'"/>
                             <field name="auto_restock" widget="boolean_toggle"/>
                             <field name="preferred_vendor_id"/>
+                            <field name="si_similar_product_id" options="{'no_create': True}"/>
                         </group>
                     </group>
 
@@ -52,6 +53,8 @@
                             <field name="forecast_shortage" invisible="forecast_shortage == 0"/>
                             <field name="is_low_stock"/>
                             <field name="days_of_cover"/>
+                            <field name="is_overstock" invisible="not is_overstock"/>
+                            <field name="si_excess_value" invisible="not is_overstock"/>
                         </group>
                         <group string="Replenishment">
                             <field name="safety_stock"/>
@@ -90,6 +93,8 @@
                 <field name="si_stock_value" optional="hide" sum="Total"/>
                 <field name="last_sale_date" optional="hide"/>
                 <field name="is_dead_stock" optional="hide"/>
+                <field name="is_overstock" optional="hide"/>
+                <field name="si_excess_value" optional="hide" sum="Total"/>
             </list>
         </field>
     </record>
@@ -103,6 +108,7 @@
                 <filter string="Low Stock" name="si_low_stock" domain="[('is_low_stock', '=', True)]"/>
                 <filter string="High Risk" name="si_high_risk" domain="[('risk_level', '=', 'high')]"/>
                 <filter string="Dead Stock" name="si_dead_stock" domain="[('is_dead_stock', '=', True)]"/>
+                <filter string="Overstock" name="si_overstock" domain="[('is_overstock', '=', True)]"/>
                 <separator/>
             </xpath>
             <xpath expr="//search" position="inside">

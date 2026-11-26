@@ -27,6 +27,11 @@ class SmartInventoryCase(TransactionCase):
         cls.set_param("replenish_mode", "po")
         cls.set_param("po_approval_amount", "0")
         cls.set_param("ai_enabled", "False")
+        cls.set_param("restock_review", "False")
+        cls.set_param("weekly_budget", "0")
+        cls.set_param("order_qty_mode", "cover")
+        cls.set_param("require_adjust_reason", "False")
+        cls.set_param("cycle_count", "False")
 
     @classmethod
     def set_param(cls, key, value):

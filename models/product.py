@@ -3,6 +3,7 @@ import logging
 import math
 import random
 import re
+import time
 from datetime import timedelta
 
 from odoo import api, fields, models, _
@@ -74,6 +75,9 @@ class ProductTemplate(models.Model):
         string="Reorder Rule", default="manual", required=True,
         help="Manual: restock below 'Low Stock Alert'.\n"
              "Computed: restock below demand during vendor lead time plus safety stock.")
+    si_similar_product_id = fields.Many2one(
+        "product.template", string="Forecast Like",
+        help="New product: until it has 30 days of sales, its forecast uses this product's sales history.")
 
     # =========================
     # STOCK STATUS (always live, issue #1)
@@ -90,6 +94,12 @@ class ProductTemplate(models.Model):
         help="Low Stock Alert in manual mode, computed reorder point otherwise.")
     days_of_cover = fields.Float(string="Days of Cover", compute="_compute_stock_status")
     si_stock_value = fields.Float(string="Stock Value", compute="_compute_stock_status")
+    is_overstock = fields.Boolean(
+        string="Overstock", compute="_compute_stock_status", search="_search_is_overstock",
+        help="More days of cover than the overstock limit in Settings.")
+    si_excess_value = fields.Float(
+        string="Excess Stock Value", compute="_compute_stock_status",
+        help="Value of the stock above the overstock limit (cash tied up).")
 
     # =========================
     # FORECAST
@@ -132,6 +142,7 @@ class ProductTemplate(models.Model):
                  "avg_daily_demand", "standard_price")
     def _compute_stock_status(self):
         expired = self.product_variant_ids._si_expired_qty()
+        overstock_days = self.env["smart.inventory.config"].get("overstock_days")
         for rec in self:
             usable = rec.qty_available - sum(expired.get(v.id, 0.0) for v in rec.product_variant_ids)
             min_level = rec._si_min_level()
@@ -142,6 +153,9 @@ class ProductTemplate(models.Model):
             rec.forecast_shortage = max(0.0, min_level - usable) if storable else 0.0
             rec.days_of_cover = usable / rec.avg_daily_demand if rec.avg_daily_demand > 0 else 0.0
             rec.si_stock_value = max(rec.qty_available, 0.0) * rec.standard_price
+            excess = max(usable - rec.avg_daily_demand * overstock_days, 0.0) if rec.avg_daily_demand > 0 else 0.0
+            rec.is_overstock = storable and excess > 0
+            rec.si_excess_value = excess * rec.standard_price if storable else 0.0
 
     def _si_min_level(self):
         self.ensure_one()
@@ -157,6 +171,14 @@ class ProductTemplate(models.Model):
         low = Domain("id", "in", self._si_low_stock_ids())
         positive = True in value
         return low if (operator == "in") == positive else ~low
+
+    def _search_is_overstock(self, operator, value):
+        if operator not in ("in", "not in"):
+            return NotImplemented
+        products = self.with_context(active_test=True).search(
+            [("is_storable", "=", True), ("avg_daily_demand", ">", 0)])
+        over = Domain("id", "in", products.filtered("is_overstock").ids)
+        return over if (operator == "in") == (True in value) else ~over
 
     def _search_forecast_shortage(self, operator, value):
         if operator not in (">", ">=", "<", "<=", "=", "in"):
@@ -264,13 +286,21 @@ class ProductTemplate(models.Model):
         cron = self.env["ir.cron"]
         for start in range(0, len(todo), batch_size):
             batch = todo[start:start + batch_size]
+            # OLD: a failed batch rolled back the whole transaction (and re-raised in tests)
+            # try:
+            #     batch._si_update_forecasts()
+            # except Exception:
+            #     _logger.exception("Smart Inventory: forecast batch failed (%s)", batch.ids)
+            #     if odoo_module.current_test:
+            #         raise
+            #     self.env.cr.rollback()
+            #     continue
             try:
-                batch._si_update_forecasts()
+                with self.env.cr.savepoint():
+                    batch._si_update_forecasts()
             except Exception:
                 _logger.exception("Smart Inventory: forecast batch failed (%s)", batch.ids)
-                if odoo_module.current_test:
-                    raise
-                self.env.cr.rollback()
+                self.env.invalidate_all()
                 continue
             if not odoo_module.current_test:
                 cron._commit_progress(len(batch), remaining=len(todo) - start - len(batch))
@@ -293,6 +323,8 @@ class ProductTemplate(models.Model):
             vals = {"last_sale_date": last or False, "is_dead_stock": bool(dead)}
             if tmpl.last_sale_date != vals["last_sale_date"] or tmpl.is_dead_stock != vals["is_dead_stock"]:
                 tmpl.write(vals)
+        if self.env["smart.inventory.config"].get("fefo"):
+            self._si_apply_fefo()
         return True
 
     @api.model
@@ -353,15 +385,21 @@ class ProductTemplate(models.Model):
         if not variants:
             return
         today = engine._today()
-        sales = engine._daily_sales(variants, 90, end=today)
+        sales = templates._si_borrowed_sales(engine._daily_sales(variants, 90, end=today), end=today)
         warehouses = self.env["stock.warehouse"].search([("company_id", "in", self.env.companies.ids)])
         self.env["smart.inventory.stock.level"]._si_refresh(variants, warehouses, horizon)
 
+        Event = self.env["smart.inventory.demand.event"]
+        window = (today - timedelta(days=90), today + timedelta(days=horizon))
+        events = Event._events_between(*window)
         Forecast = self.env["smart.inventory.forecast"]
+        newly_high = self.browse()
         for tmpl in templates:
+            previous_risk = tmpl.risk_level
+            day_factors = Event._day_factors(tmpl, *window, events=events) if events else {}
             forecast = daily = variance = 0.0
             for variant in tmpl.product_variant_ids:
-                stats = engine._baseline(sales.get(variant.id, {}), horizon, end=today)
+                stats = engine._baseline(sales.get(variant.id, {}), horizon, end=today, day_factors=day_factors)
                 forecast += stats["forecast"]
                 daily += stats["daily"]
                 variance += stats["sigma"] ** 2
@@ -387,6 +425,8 @@ class ProductTemplate(models.Model):
             if ai:
                 risk, insight = ai["risk"], ai["insight"] or insight
             tmpl.sudo().write({"risk_level": risk, "ai_insight": insight})
+            if risk == "high" and previous_risk != "high":
+                newly_high |= tmpl
 
             Forecast.create({
                 "product_tmpl_id": tmpl.id,
@@ -398,6 +438,34 @@ class ProductTemplate(models.Model):
                 "source": vals["forecast_source"],
                 "company_id": (tmpl.company_id or self.env.company).id,
             })
+        if newly_high:
+            self.env["smart.inventory.alert"]._send_high_risk(newly_high)
+        if config.get("replenish_mode") == "orderpoint":
+            templates.product_variant_ids._si_sync_orderpoints(warehouses)
+
+    def _si_borrowed_sales(self, sales, warehouse=None, end=None):
+        """{variant_id: {date: qty}} where a new product (less than 30 days of sales) with a
+        'Forecast Like' product uses that product's history before its own first sale."""
+        engine = self.env["smart.inventory.forecast.engine"]
+        end = end or engine._today()
+        for tmpl in self.filtered("si_similar_product_id"):
+            own = {}
+            for variant in tmpl.product_variant_ids:
+                for day, qty in sales.get(variant.id, {}).items():
+                    own[day] = own.get(day, 0.0) + qty
+            sold_days = [day for day, qty in own.items() if qty]
+            first_sale = min(sold_days) if sold_days else None
+            if first_sale and (end - first_sale).days >= 30:
+                continue
+            similar = tmpl.si_similar_product_id
+            borrowed = {}
+            for per_day in engine._daily_sales(similar.product_variant_ids, 90, warehouse=warehouse, end=end).values():
+                for day, qty in per_day.items():
+                    if not first_sale or day < first_sale:
+                        borrowed[day] = borrowed.get(day, 0.0) + qty
+            main = tmpl.product_variant_id.id
+            sales[main] = {**borrowed, **sales.get(main, {})}
+        return sales
 
     def _si_service_level(self):
         self.ensure_one()
@@ -501,11 +569,17 @@ class ProductTemplate(models.Model):
                 "format": {"type": "json_schema", "schema": AI_RESPONSE_SCHEMA},
             },
         }
+        started = time.monotonic()
         if model in AI_FALLBACK_MODELS:
             response = client.beta.messages.create(
                 betas=["server-side-fallback-2026-07-01"], fallbacks="default", **params)
         else:
             response = client.messages.create(**params)
+        usage = getattr(response, "usage", None)
+        _logger.info("Smart Inventory: AI forecast for %s with %s: %s input / %s output tokens, %.2fs",
+                     self.display_name, getattr(response, "model", model),
+                     getattr(usage, "input_tokens", "?"), getattr(usage, "output_tokens", "?"),
+                     time.monotonic() - started)
         if response.stop_reason in ("refusal", "max_tokens"):
             _logger.warning("Smart Inventory: AI reply for %s stopped (%s)", self.display_name, response.stop_reason)
             return None
@@ -594,6 +668,18 @@ class ProductTemplate(models.Model):
                 order.write({"state": "sale", "date_order": now - timedelta(days=days_ago)})
         templates._si_update_forecasts()
         return True
+
+    @api.model
+    def _si_apply_fefo(self):
+        """Set 'First Expired, First Out' removal on categories of products with expiration
+        dates that have no removal strategy yet. Needs product_expiry."""
+        fefo = self.env.ref("product_expiry.removal_fefo", raise_if_not_found=False)
+        if not fefo or "use_expiration_date" not in self._fields:
+            return self.env["product.category"]
+        categories = self.search([("use_expiration_date", "=", True)]).categ_id.filtered(
+            lambda c: not c.removal_strategy_id)
+        categories.sudo().write({"removal_strategy_id": fefo.id})
+        return categories
 
     # =========================
     # HELPERS
@@ -692,11 +778,47 @@ class ProductProduct(models.Model):
             daily = level.daily_demand if level else tmpl.avg_daily_demand
             safety = level.safety_stock if level else tmpl.safety_stock
             target = max(daily * cover_days + safety, min_level, demand)
-            return target - position, min_level
+            # OLD: always ordered up to the target days of cover
+            # return target - position, min_level
+            return max(target - position, self._si_eoq(daily)), min_level
         min_level = level.min_qty_override if level and level.min_qty_override else float(tmpl.low_stock_threshold)
         if float_compare(position, min_level, precision_digits=4) > 0 and position >= demand:
             return 0.0, min_level
         return max(float(tmpl.restock_quantity), demand - position, min_level - position), min_level
+
+    def _si_eoq(self, daily):
+        """Economic order quantity sqrt(2DS/H) when Settings uses it, else 0.
+        D = yearly demand, S = cost per order, H = yearly holding cost per unit."""
+        self.ensure_one()
+        config = self.env["smart.inventory.config"]
+        if config.get("order_qty_mode") != "eoq" or daily <= 0:
+            return 0.0
+        holding = self.standard_price * config.get("holding_cost_pct") / 100.0
+        if holding <= 0:
+            return 0.0
+        return math.sqrt(2 * daily * 365 * config.get("order_cost") / holding)
+
+    def _si_sync_orderpoints(self, warehouses):
+        """Orderpoint mode: keep Odoo reordering rules at the computed levels on every forecast run."""
+        cover_days = self.env["smart.inventory.config"].get("target_cover_days")
+        Level = self.env["smart.inventory.stock.level"]
+        levels = {(lvl.product_id.id, lvl.warehouse_id.id): lvl for lvl in Level.search([
+            ("product_id", "in", self.ids), ("warehouse_id", "in", warehouses.ids)])}
+        for product in self.filtered(lambda p: p.is_storable and p.product_tmpl_id.auto_restock
+                                     and not p.product_tmpl_id.is_dead_stock):
+            tmpl = product.product_tmpl_id
+            for warehouse in warehouses:
+                level = levels.get((product.id, warehouse.id))
+                if not level:
+                    continue
+                min_level = level._min_level()
+                if tmpl.reorder_mode == "auto":
+                    order_qty = max(level.daily_demand * cover_days + level.safety_stock - min_level,
+                                    product._si_eoq(level.daily_demand), 0.0)
+                else:
+                    order_qty = float(tmpl.restock_quantity)
+                seller = product._si_seller(order_qty)
+                product._si_update_orderpoint(warehouse, min_level, product._si_round_qty(order_qty, seller))
 
     def _si_smart_restock(self, warehouses=None):
         """Single replenishment path used by the cron, sale confirmation and dashboard (E2.4).
@@ -712,6 +834,13 @@ class ProductProduct(models.Model):
                                  and not p.product_tmpl_id.is_dead_stock)
         if not products:
             return self.env["purchase.order"]
+        # Most urgent first, so a weekly budget is spent on the highest risks.
+        risk_order = {"high": 0, "medium": 1, "low": 2}
+        products = products.sorted(lambda p: (risk_order.get(p.product_tmpl_id.risk_level, 3),
+                                              p.product_tmpl_id.days_of_cover, p.id))
+        review = config.get("restock_review")
+        Suggestion = self.env["smart.inventory.suggestion"]
+        PO = self.env["purchase.order"]
         warehouses = warehouses or self.env["stock.warehouse"].search([("company_id", "=", self.env.company.id)])
         Level = self.env["smart.inventory.stock.level"]
         levels = {(lvl.product_id.id, lvl.warehouse_id.id): lvl for lvl in Level.search([
@@ -720,8 +849,12 @@ class ProductProduct(models.Model):
         for warehouse in warehouses:
             expired = products._si_expired_qty(warehouse)
             open_rfq = products._si_open_rfq_qty(warehouse)
+            suggested = products._si_open_suggestion_qty(warehouse)
             for product in products.with_context(warehouse_id=warehouse.id):
-                position = product.virtual_available - expired.get(product.id, 0.0) + open_rfq.get(product.id, 0.0)
+                # OLD: open suggestions did not exist, so they were not counted as incoming
+                # position = product.virtual_available - expired.get(product.id, 0.0) + open_rfq.get(product.id, 0.0)
+                position = (product.virtual_available - expired.get(product.id, 0.0)
+                            + open_rfq.get(product.id, 0.0) + suggested.get(product.id, 0.0))
                 level = levels.get((product.id, warehouse.id), Level)
                 qty, min_level = product._si_restock_need(level, position)
                 if float_compare(qty, 0.0, precision_digits=4) <= 0:
@@ -738,9 +871,55 @@ class ProductProduct(models.Model):
                 if not vendor:
                     _logger.info("Smart Inventory: no vendor for %s, skipping restock", product.display_name)
                     continue
-                touched |= self.env["purchase.order"]._si_add_restock_line(vendor, warehouse, product, qty)
+                if Suggestion._si_is_snoozed(product, warehouse):
+                    continue
+                reason = product._si_restock_reason(level, position, min_level, qty, vendor, seller)
+                if review:
+                    Suggestion._si_propose(vendor, warehouse, product, qty, seller, reason)
+                    continue
+                left = PO._si_budget_left(warehouse.company_id)
+                if left is not None and product._si_estimated_cost(qty, vendor, seller, warehouse.company_id) > left + 0.005:
+                    Suggestion._si_propose(vendor, warehouse, product, qty, seller,
+                                           _("Over this week's restock budget. %s", reason), over_budget=True)
+                    continue
+                # OLD: every need went straight to a purchase order
+                # touched |= self.env["purchase.order"]._si_add_restock_line(vendor, warehouse, product, qty)
+                touched |= PO._si_add_restock_line(vendor, warehouse, product, qty)
         touched._si_check_approval()
         return touched
+
+    def _si_open_suggestion_qty(self, warehouse):
+        """{product_id: qty} of restock suggestions still waiting for review in this warehouse."""
+        groups = self.env["smart.inventory.suggestion"].sudo()._read_group([
+            ("product_id", "in", self.ids), ("warehouse_id", "=", warehouse.id), ("state", "=", "new"),
+        ], ["product_id"], ["quantity:sum"])
+        return {product.id: qty for product, qty in groups}
+
+    def _si_estimated_cost(self, qty, vendor, seller, company):
+        """Untaxed cost of `qty` in company currency, from the vendor price line or the product cost."""
+        self.ensure_one()
+        if seller and seller.partner_id == vendor:
+            price = seller.price
+            if seller.currency_id and seller.currency_id != company.currency_id:
+                price = seller.currency_id._convert(price, company.currency_id, company, fields.Date.context_today(self))
+        else:
+            price = self.standard_price
+        return qty * price
+
+    def _si_restock_reason(self, level, position, min_level, qty, vendor, seller):
+        """One plain sentence explaining why `qty` is ordered."""
+        self.ensure_one()
+        tmpl = self.product_tmpl_id
+        horizon = self.env["smart.inventory.config"].get("forecast_horizon")
+        demand = level.forecast if level else tmpl.predicted_demand
+        pack = seller.si_pack_multiple if seller else 0.0
+        text = _("Stock position %(position).0f (on hand plus incoming) against restock level %(level).0f "
+                 "and %(days)s-day demand %(demand).0f. Order %(qty).0f %(uom)s from %(vendor)s.",
+                 position=position, level=min_level, days=horizon, demand=demand,
+                 qty=qty, uom=self.uom_id.name, vendor=vendor.display_name)
+        if pack:
+            text += " " + _("Rounded up to packs of %(pack)g.", pack=pack)
+        return text
 
     def _si_update_orderpoint(self, warehouse, min_qty, order_qty):
         self.ensure_one()

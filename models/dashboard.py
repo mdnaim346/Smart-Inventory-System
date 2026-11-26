@@ -76,6 +76,10 @@ class SmartInventoryDashboard(models.AbstractModel):
         # Smart Inventory users may lack Purchase rights; show restock POs of their companies only.
         PO = self.env["purchase.order"].sudo()
         smart = PO._si_smart_domain() + [("company_id", "in", self.env.companies.ids)]
+        if filters:
+            smart.append(("order_line.product_id", "in", variants.ids))
+        if warehouse:
+            smart.append(("picking_type_id.warehouse_id", "=", warehouse.id))
         return {
             "kpis": kpis,
             "totalProducts": len(products),
@@ -96,7 +100,52 @@ class SmartInventoryDashboard(models.AbstractModel):
                 ["product_id", "source_warehouse_id", "dest_warehouse_id", "quantity"], limit=10),
             "isManager": self.env.user.has_group("smart_inventory.group_smart_inventory_manager"),
             "smartOrigin": SMART_ORIGIN,
+            "overstockCount": len(products.filtered("is_overstock")),
+            "savings": self._savings(products, variants, start),
+            "suggestions": self._suggestions(variants, filters),
+            "cycleCountsDue": self.env["stock.quant"].sudo().search_count([
+                ("location_id.usage", "=", "internal"), ("company_id", "in", self.env.companies.ids),
+                ("product_id", "in", variants.ids), ("quantity", "!=", 0),
+                ("inventory_date", "<=", fields.Date.context_today(self))]),
         }
+
+    @api.model
+    def _savings(self, products, variants, start):
+        """Money view: sales lost to stockouts, cash tied up, money saved by transfers, budget left."""
+        lost = self.env["smart.inventory.stockout"].sudo()._read_group([
+            ("product_tmpl_id", "in", products.ids), ("company_id", "in", self.env.companies.ids),
+            ("date", ">=", start.date())], [], ["lost_value:sum"])[0][0] or 0.0
+        dead_value = sum(products.filtered("is_dead_stock").mapped("si_stock_value"))
+        excess_value = sum(products.filtered(lambda p: not p.is_dead_stock).mapped("si_excess_value"))
+        transfers = self.env["smart.inventory.transfer.suggestion"].sudo().search([
+            ("state", "=", "done"), ("product_id", "in", variants.ids),
+            ("company_id", "in", self.env.companies.ids), ("write_date", ">=", start)])
+        saved = sum(t.quantity * t.product_id.standard_price for t in transfers)
+        budget_left = self.env["purchase.order"]._si_budget_left(self.env.company)
+        closed = self.env["smart.inventory.forecast"].sudo()._read_group([
+            ("product_tmpl_id", "in", products.ids), ("is_closed", "=", True),
+            ("company_id", "in", self.env.companies.ids), ("date_end", ">=", start.date())],
+            [], ["abs_pct_error:avg"])[0][0]
+        return {
+            "lostSales": round(lost, 2),
+            "tiedUp": round(dead_value + excess_value, 2),
+            "deadValue": round(dead_value, 2),
+            "excessValue": round(excess_value, 2),
+            "savedByTransfers": round(saved, 2),
+            "budgetLeft": round(budget_left, 2) if budget_left is not None else None,
+            "forecastError": round(closed, 1) if closed else None,
+        }
+
+    @api.model
+    def _suggestions(self, variants, filters):
+        Suggestion = self.env["smart.inventory.suggestion"].sudo()
+        domain = [("state", "=", "new"), ("company_id", "in", self.env.companies.ids)]
+        if filters:
+            domain.append(("product_id", "in", variants.ids))
+        rows = Suggestion.search_read(
+            domain, ["product_id", "warehouse_id", "vendor_id", "quantity", "amount", "reason", "risk_level",
+                     "over_budget"], limit=5)
+        return {"count": Suggestion.search_count(domain), "rows": rows}
 
     @api.model
     def _product_row(self, p):

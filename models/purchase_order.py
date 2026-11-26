@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
@@ -58,6 +60,20 @@ class PurchaseOrder(models.Model):
                 "product_uom_id": product.uom_id.id,
             })
         return order
+
+    @api.model
+    def _si_budget_left(self, company):
+        """Weekly restock budget left for `company` (company currency), None when no budget is set.
+        Spent = untaxed amount of this week's smart restock orders that are not cancelled."""
+        budget = self.env["smart.inventory.config"].get("weekly_budget")
+        if budget <= 0:
+            return None
+        engine = self.env["smart.inventory.forecast.engine"]
+        today = engine._today()
+        week_start = engine._day_start_utc(today - timedelta(days=today.weekday()))
+        orders = self.sudo().search(self._si_smart_domain() + [
+            ("company_id", "=", company.id), ("state", "!=", "cancel"), ("create_date", ">=", week_start)])
+        return budget - sum(order._si_amount_company() for order in orders)
 
     def _si_notify_created(self):
         activity_type = self.env.ref("mail.mail_activity_data_todo", raise_if_not_found=False)

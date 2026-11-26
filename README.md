@@ -47,6 +47,39 @@ Install the folder as `smart_inventory` on the addons path.
 - Block out-of-stock sales, auto-validate deliveries (with or without backorders),
   auto-post invoices. Each can be turned off.
 
+**Purchasing control**
+- *Review Suggestions Before Ordering*: restock needs wait in *Replenishment → Suggestions
+  to Review* with the reason ("stock position 18 against restock level 40..."). A manager
+  approves (the line goes to the vendor's draft PO), edits quantity, vendor or price, or
+  rejects with a reason (no new suggestion for that product and warehouse for 7 days).
+- *Weekly Restock Budget*: the restock run orders the highest risks first; needs that do
+  not fit this week's budget become suggestions marked *over budget*.
+- *Vendor Scorecard* (Reporting): on-time receipts, quantity delivered, average delay and
+  price change over 180 days, combined into a score. Refreshed weekly.
+
+**Demand planning**
+- *Seasons and Promotions* (Configuration): a demand factor for a date range, for all
+  products, some categories or some products. Forecast days are multiplied by it; sales on
+  past event days are divided by it.
+- *Forecast Like* on a product: a new product uses a similar product's sales history until
+  it has 30 days of its own.
+
+**Stock money and counting**
+- Overstock (more days of cover than the limit in Settings) and its excess value.
+- Dashboard money row: sales lost to stockouts, cash tied up in overstock and dead stock,
+  money saved by transfers, weekly budget left (or forecast error).
+- *Clear Dead Stock* action on products: pricelist discount, return to vendor, or move to
+  another warehouse.
+- *Cycle Count*: next count dates by ABC class (A every 30 days, B 90, C 180 by default) in
+  Odoo's Physical Inventory; search by barcode.
+- Adjustment reasons on counts (optionally required) and *Reporting → Stock Adjustments*
+  by reason and month.
+- *First Expired, First Out* for products with expiration dates (needs Product Expiry).
+
+**Chat alerts**
+- Telegram bot (token and chat ID) and/or a webhook URL that receives `{"text": ...}`,
+  for a WhatsApp or SMS gateway: new high-risk products and the daily summary.
+
 ## Security
 
 | Group | Can |
