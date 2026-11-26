@@ -8,10 +8,11 @@ Install the folder as `smart_inventory` on the addons path.
 **Forecasting**
 - Daily cron computes a statistical baseline per product and warehouse: weighted
   7/30/90-day average of confirmed sales (by order date) with a day-of-week factor.
-- Optional AI adjustment: enable *Use AI Provider* in Settings. The provider call in
-  `product.template._ask_ai` is a stub until a provider is connected (issue E1.1);
-  replies must be JSON (`prediction`, `risk`, `insight`) and are validated, otherwise
-  the baseline is kept. Batch size and a daily call budget are configurable.
+- Optional Claude AI adjustment (see *AI setup* below). Claude returns JSON
+  (`prediction`, `risk`, `insight`) through structured outputs; the reply is validated
+  and the prediction is kept within *Max AI Adjustment (%)* of the baseline. On a missing
+  package, API error, refusal or invalid reply the baseline is kept. Batch size and a
+  daily call budget are configurable.
 - Only products with new sales or stock moves are refreshed; every run is stored in
   *Reporting → Forecast History* and compared with actual sales (MAPE).
 
@@ -52,6 +53,25 @@ Install the folder as `smart_inventory` on the addons path.
 | --- | --- |
 | Smart Inventory / User | See dashboard, forecasts, stock levels |
 | Smart Inventory / Manager | Change restock settings, run restock and forecasts, approve POs, create transfers, Settings |
+
+## Install
+
+1. Put this folder on the addons path as `smart_inventory`.
+2. `pip install xlsxwriter` (required) and `pip install anthropic` (only for AI).
+3. Install *AI-Powered Smart Inventory* from Apps. Install `product_expiry` too if you
+   track lot expiry dates.
+4. A database created with demo data gets four sample products, two vendors and 60 days
+   of sales, so the dashboard, forecast chart and restock flow can be tried at once.
+
+## AI setup
+
+1. *Smart Inventory → Configuration → Settings → Forecasting*, turn on *Use AI Provider*.
+2. Enter a Claude API key (administrators only), or leave it empty and set
+   `ANTHROPIC_API_KEY` in the server environment.
+3. *Claude Model* defaults to `claude-opus-5-5`. Requests use low effort, structured
+   JSON output and, on models that support it, server-side refusal fallback.
+4. Set *Max AI Calls per Day* to control cost. Only products whose sales or stock
+   changed are sent, and only product name and quantities leave the database.
 
 ## Tests
 

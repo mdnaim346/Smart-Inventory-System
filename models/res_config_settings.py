@@ -42,6 +42,19 @@ class ResConfigSettings(models.TransientModel):
         string="AI Batch Size", default=50, config_parameter=PARAM + "ai_batch_size")
     si_ai_daily_limit = fields.Integer(
         string="Max AI Calls per Day", default=500, config_parameter=PARAM + "ai_daily_limit")
+    si_ai_api_key = fields.Char(
+        string="Claude API Key", config_parameter=PARAM + "ai_api_key", groups="base.group_system",
+        help="Anthropic API key. Leave empty to use the server's ANTHROPIC_API_KEY environment variable.")
+    si_ai_model = fields.Char(
+        string="Claude Model", default="claude-opus-5-5", config_parameter=PARAM + "ai_model")
+    si_ai_max_adjust_pct = fields.Float(
+        string="Max AI Adjustment (%)", default=50.0, config_parameter=PARAM + "ai_max_adjust_pct",
+        help="The AI may move the statistical forecast up or down by at most this percentage. 0 = no limit.")
+    si_ai_package_missing = fields.Boolean(compute="_compute_si_ai_package_missing")
+
+    def _compute_si_ai_package_missing(self):
+        from . import product
+        self.si_ai_package_missing = product.anthropic is None
 
     # Replenishment
     si_replenish_mode = fields.Selection(
@@ -79,6 +92,9 @@ class SmartInventoryConfig(models.AbstractModel):
         "ai_enabled": False,
         "ai_batch_size": 50,
         "ai_daily_limit": 500,
+        "ai_api_key": "",
+        "ai_model": "claude-opus-5-5",
+        "ai_max_adjust_pct": 50.0,
         "replenish_mode": "po",
         "service_level": 95.0,
         "service_level_a": 98.0,

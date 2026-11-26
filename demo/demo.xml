@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="demo_vendor_fresh_foods" model="res.partner">
+        <field name="name">Fresh Foods Wholesale</field>
+        <field name="is_company" eval="True"/>
+        <field name="supplier_rank">1</field>
+    </record>
+    <record id="demo_vendor_city_traders" model="res.partner">
+        <field name="name">City Traders Ltd</field>
+        <field name="is_company" eval="True"/>
+        <field name="supplier_rank">1</field>
+    </record>
+
+    <record id="demo_product_rice" model="product.template">
+        <field name="name">Premium Rice 5kg</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="list_price">780</field>
+        <field name="standard_price">650</field>
+        <field name="reorder_mode">auto</field>
+        <field name="preferred_vendor_id" ref="demo_vendor_fresh_foods"/>
+    </record>
+    <record id="demo_seller_rice" model="product.supplierinfo">
+        <field name="product_tmpl_id" ref="demo_product_rice"/>
+        <field name="partner_id" ref="demo_vendor_fresh_foods"/>
+        <field name="price">640</field>
+        <field name="min_qty">20</field>
+        <field name="delay">5</field>
+        <field name="si_pack_multiple">10</field>
+    </record>
+
+    <record id="demo_product_oil" model="product.template">
+        <field name="name">Soybean Oil 1L</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="list_price">190</field>
+        <field name="standard_price">165</field>
+        <field name="low_stock_threshold">40</field>
+        <field name="restock_quantity">120</field>
+    </record>
+    <record id="demo_seller_oil_a" model="product.supplierinfo">
+        <field name="product_tmpl_id" ref="demo_product_oil"/>
+        <field name="partner_id" ref="demo_vendor_fresh_foods"/>
+        <field name="price">168</field>
+        <field name="delay">3</field>
+        <field name="si_pack_multiple">12</field>
+    </record>
+    <record id="demo_seller_oil_b" model="product.supplierinfo">
+        <field name="product_tmpl_id" ref="demo_product_oil"/>
+        <field name="partner_id" ref="demo_vendor_city_traders"/>
+        <field name="price">160</field>
+        <field name="delay">6</field>
+        <field name="si_pack_multiple">24</field>
+    </record>
+
+    <record id="demo_product_biscuit" model="product.template">
+        <field name="name">Butter Biscuit Pack</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="list_price">45</field>
+        <field name="standard_price">32</field>
+        <field name="low_stock_threshold">100</field>
+        <field name="restock_quantity">300</field>
+    </record>
+    <record id="demo_seller_biscuit" model="product.supplierinfo">
+        <field name="product_tmpl_id" ref="demo_product_biscuit"/>
+        <field name="partner_id" ref="demo_vendor_city_traders"/>
+        <field name="price">31</field>
+        <field name="min_qty">100</field>
+        <field name="delay">2</field>
+    </record>
+
+    <record id="demo_product_lentil" model="product.template">
+        <field name="name">Red Lentil 1kg</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="list_price">140</field>
+        <field name="standard_price">118</field>
+        <field name="low_stock_threshold">30</field>
+        <field name="restock_quantity">100</field>
+    </record>
+    <record id="demo_seller_lentil" model="product.supplierinfo">
+        <field name="product_tmpl_id" ref="demo_product_lentil"/>
+        <field name="partner_id" ref="demo_vendor_fresh_foods"/>
+        <field name="price">115</field>
+        <field name="delay">4</field>
+    </record>
+
+    <record id="demo_quant_rice" model="stock.quant">
+        <field name="product_id" model="product.product" eval="obj().env.ref('smart_inventory.demo_product_rice').product_variant_id.id"/>
+        <field name="inventory_quantity">35</field>
+        <field name="location_id" model="stock.location" eval="obj().env.ref('stock.warehouse0').lot_stock_id.id"/>
+    </record>
+    <record id="demo_quant_oil" model="stock.quant">
+        <field name="product_id" model="product.product" eval="obj().env.ref('smart_inventory.demo_product_oil').product_variant_id.id"/>
+        <field name="inventory_quantity">18</field>
+        <field name="location_id" model="stock.location" eval="obj().env.ref('stock.warehouse0').lot_stock_id.id"/>
+    </record>
+    <record id="demo_quant_biscuit" model="stock.quant">
+        <field name="product_id" model="product.product" eval="obj().env.ref('smart_inventory.demo_product_biscuit').product_variant_id.id"/>
+        <field name="inventory_quantity">640</field>
+        <field name="location_id" model="stock.location" eval="obj().env.ref('stock.warehouse0').lot_stock_id.id"/>
+    </record>
+    <record id="demo_quant_lentil" model="stock.quant">
+        <field name="product_id" model="product.product" eval="obj().env.ref('smart_inventory.demo_product_lentil').product_variant_id.id"/>
+        <field name="inventory_quantity">12</field>
+        <field name="location_id" model="stock.location" eval="obj().env.ref('stock.warehouse0').lot_stock_id.id"/>
+    </record>
+    <function model="stock.quant" name="action_apply_inventory">
+        <function eval="[[('id', 'in', (ref('demo_quant_rice'), ref('demo_quant_oil'),
+                                        ref('demo_quant_biscuit'), ref('demo_quant_lentil')))]]"
+                  model="stock.quant" name="search"/>
+    </function>
+
+    <function model="product.template" name="_si_demo_load_history"/>
+</odoo>

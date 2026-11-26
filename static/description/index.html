@@ -1,0 +1,71 @@
+<section class="oe_container">
+    <div class="oe_row oe_spaced">
+        <h2 class="oe_slogan" style="color:#1e1b4b;">Smart Inventory</h2>
+        <h3 class="oe_slogan">Know what to buy, how much, from whom and when, and why.</h3>
+        <div class="oe_span12" style="text-align:center;">
+            <img src="banner.png" alt="Smart Inventory" style="max-width:100%;border-radius:8px;"/>
+        </div>
+    </div>
+</section>
+
+<section class="oe_container oe_dark">
+    <div class="oe_row oe_spaced">
+        <h3 class="oe_slogan">What it does</h3>
+        <div class="oe_span6">
+            <h4>Demand forecasting</h4>
+            <ul>
+                <li>Weighted 7/30/90-day demand with a day-of-week pattern, per product and warehouse</li>
+                <li>Forecast history and accuracy (Mean Absolute Percentage Error) per product</li>
+                <li>Optional Claude AI: adjusts the forecast within a limit you set, and writes a one-line risk insight</li>
+                <li>Daily AI call budget; without AI the statistical forecast keeps working</li>
+            </ul>
+            <h4>Smart replenishment</h4>
+            <ul>
+                <li>Reorder point and safety stock from vendor lead time and service level (by ABC class)</li>
+                <li>Order quantity for your target days of cover, vendor minimum quantity and pack size</li>
+                <li>Cheapest valid vendor, or your preferred vendor</li>
+                <li>One draft purchase order per vendor and warehouse, no duplicates</li>
+                <li>Transfer from a warehouse with excess stock before buying</li>
+                <li>Large restock orders wait for a manager's approval</li>
+            </ul>
+        </div>
+        <div class="oe_span6">
+            <h4>Stock health</h4>
+            <ul>
+                <li>Low stock on live usable quantity (expired lots excluded)</li>
+                <li>Dead stock detection; dead products are never restocked</li>
+                <li>Lots expiring soon</li>
+                <li>Monthly ABC (value) and XYZ (demand variability) classes</li>
+            </ul>
+            <h4>Dashboard and reports</h4>
+            <ul>
+                <li>Stock value, turnover, days of cover, fill rate and stockouts</li>
+                <li>Filters by period, category, warehouse, vendor and risk</li>
+                <li>Forecast chart per product: sales, forecast and stock</li>
+                <li>XLSX and PDF exports, daily risk e-mail digest</li>
+            </ul>
+            <h4>Sales automation (each one optional)</h4>
+            <ul>
+                <li>Block out-of-stock sales</li>
+                <li>Validate deliveries automatically, with or without backorders</li>
+                <li>Post invoices automatically</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<section class="oe_container">
+    <div class="oe_row oe_spaced">
+        <h3 class="oe_slogan">Setup</h3>
+        <div class="oe_span12">
+            <ol>
+                <li>Install the module. Smart Inventory Managers get the Settings page under <b>Smart Inventory &gt; Configuration</b>.</li>
+                <li>Set the forecast horizon, service levels, target days of cover and approval amount.</li>
+                <li>Optional AI: run <code>pip install anthropic</code> on the server, turn on <b>Use AI Provider</b> and enter your Claude API key.</li>
+                <li>Open the <b>Dashboard</b> and press <b>Run Restock</b>, or let the hourly job do it.</li>
+            </ol>
+            <p>Two access groups: <b>User</b> (see dashboard and forecasts) and <b>Manager</b> (settings, restock, approvals).</p>
+            <p>Questions and bug reports: <a href="https://github.com/mdnaim346/Smart-Inventory-System/issues">GitHub issues</a>.</p>
+        </div>
+    </div>
+</section>

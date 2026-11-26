@@ -31,7 +31,9 @@ body:has(.smart-dashboard-premium) .o_content {
 .smart-dashboard-premium {
     min-height: 100%;
     padding: 2rem;
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    /* OLD: font loaded from Google Fonts at runtime (fails offline, leaks visits to a third party)
+    font-family: 'Plus Jakarta Sans', sans-serif; */
+    font-family: inherit;
     color: var(--nebula-text-main) !important;
     background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
     position: relative;

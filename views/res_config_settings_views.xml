@@ -27,9 +27,16 @@
                         <setting help="Days of demand predicted by each forecast">
                             <field name="si_forecast_horizon"/>
                         </setting>
-                        <setting help="Send forecasts to the connected AI provider; otherwise the statistical baseline is used">
+                        <setting help="Let Claude adjust the statistical forecast and explain the risk; otherwise the baseline is used">
                             <field name="si_ai_enabled"/>
                             <div class="mt-2" invisible="not si_ai_enabled">
+                                <div class="alert alert-warning py-1 mb-2" role="alert" invisible="not si_ai_package_missing">
+                                    Install the <code>anthropic</code> Python package on the server to use AI. Until then the baseline is used.
+                                </div>
+                                <field name="si_ai_package_missing" invisible="1"/>
+                                <div groups="base.group_system"><label for="si_ai_api_key"/> <field name="si_ai_api_key" password="True" class="oe_inline"/></div>
+                                <div><label for="si_ai_model"/> <field name="si_ai_model" class="oe_inline"/></div>
+                                <div><label for="si_ai_max_adjust_pct"/> <field name="si_ai_max_adjust_pct" class="oe_inline"/></div>
                                 <div><label for="si_ai_batch_size"/> <field name="si_ai_batch_size" class="oe_inline"/></div>
                                 <div><label for="si_ai_daily_limit"/> <field name="si_ai_daily_limit" class="oe_inline"/></div>
                             </div>

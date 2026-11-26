@@ -1,5 +1,6 @@
 <odoo>
     <menuitem id="smart_inventory_root" name="Smart Inventory" sequence="10"
+              web_icon="smart_inventory,static/description/icon.png"
               groups="smart_inventory.group_smart_inventory_user"/>
 
     <menuitem id="smart_inventory_dashboard" name="Dashboard" parent="smart_inventory_root"

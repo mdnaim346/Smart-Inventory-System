@@ -26,7 +26,9 @@
                         </button>
                         <button t-if="state.isManager" id="btn_global_restock" name="action_restock"
                                 class="btn-neon-primary" t-on-click="triggerRestock">
-                            <i class="fa fa-rocket"/> RESTOCK SHIELD
+                            <!-- OLD: label did not say what the button does
+                            <i class="fa fa-rocket"/> RESTOCK SHIELD -->
+                            <i class="fa fa-refresh"/> Run Restock
                         </button>
                     </div>
                 </nav>

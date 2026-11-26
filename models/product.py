@@ -1,6 +1,7 @@
 import json
 import logging
 import math
+import random
 import re
 from datetime import timedelta
 
@@ -12,11 +13,37 @@ from odoo.tools import float_compare
 
 _logger = logging.getLogger(__name__)
 
+try:
+    import anthropic
+except ImportError:
+    anthropic = None
+
 SMART_ORIGIN = "Smart Restock"
 # Origins written by earlier versions; still counted as smart restock POs.
 LEGACY_ORIGINS = ("Auto Restock", "AI Smart Restock")
 RISK_LEVELS = ("low", "medium", "high")
 OPEN_RFQ_STATES = ("draft", "sent", "to approve")
+
+AI_SYSTEM_PROMPT = (
+    "You are a demand planner for a trading company. You receive one product's stock and "
+    "a statistical demand baseline. Adjust the baseline only when the numbers justify it, "
+    "assess the risk of running out of stock within the horizon, and explain it in one short "
+    "sentence a store manager understands."
+)
+AI_RESPONSE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "prediction": {"type": "number"},
+        "risk": {"type": "string", "enum": list(RISK_LEVELS)},
+        "insight": {"type": "string"},
+    },
+    "required": ["prediction", "risk", "insight"],
+    "additionalProperties": False,
+}
+# Models that accept server-side refusal fallbacks ("default" routing).
+AI_FALLBACK_MODELS = ("claude-opus-5-5", "claude-opus-5", "claude-sonnet-5-5", "claude-fable-5-1", "claude-fable-5-2")
+AI_TIMEOUT_SECONDS = 30.0
+_AI_CLIENTS = {}
 
 
 def _check_manager(env):
@@ -428,15 +455,73 @@ class ProductTemplate(models.Model):
         if response is None:
             return None
         self._si_ai_count_call()
-        return self._parse_ai_response(response)
+        # OLD: returned the parsed reply as is, so the AI could move the forecast without limit
+        # return self._parse_ai_response(response)
+        parsed = self._parse_ai_response(response)
+        if parsed:
+            parsed["prediction"] = self._si_clamp_ai_prediction(parsed["prediction"], baseline)
+        return parsed
+
+    @api.model
+    def _si_clamp_ai_prediction(self, prediction, baseline):
+        """Keep the AI forecast within +/- the configured % of a non-zero baseline."""
+        limit = self.env["smart.inventory.config"].get("ai_max_adjust_pct")
+        if baseline <= 0 or limit <= 0:
+            return prediction
+        low, high = baseline * (1 - limit / 100.0), baseline * (1 + limit / 100.0)
+        return min(max(prediction, max(low, 0.0)), high)
+
+    # OLD: stub kept until a provider was connected (E1.1)
+    # def _ask_ai(self, prompt):
+    #     """Send `prompt` to the configured AI provider and return its text reply.
+    #
+    #     Returns None while no provider is connected; forecasts then use the
+    #     statistical baseline. Provider integration is tracked in issue E1.1.
+    #     """
+    #     return None
 
     def _ask_ai(self, prompt):
-        """Send `prompt` to the configured AI provider and return its text reply.
+        """Send `prompt` to Claude and return the JSON text reply, or None.
 
-        Returns None while no provider is connected; forecasts then use the
-        statistical baseline. Provider integration is tracked in issue E1.1.
+        None (baseline is kept) when the `anthropic` package is missing, the
+        model refuses, or the reply is cut off. API errors propagate to the
+        caller, which logs them and keeps the baseline.
         """
-        return None
+        client = self._si_ai_client()
+        if client is None:
+            return None
+        model = self.env["smart.inventory.config"].get("ai_model")
+        params = {
+            "model": model,
+            "max_tokens": 4096,
+            "system": AI_SYSTEM_PROMPT,
+            "messages": [{"role": "user", "content": prompt}],
+            "output_config": {
+                "effort": "low",
+                "format": {"type": "json_schema", "schema": AI_RESPONSE_SCHEMA},
+            },
+        }
+        if model in AI_FALLBACK_MODELS:
+            response = client.beta.messages.create(
+                betas=["server-side-fallback-2026-07-01"], fallbacks="default", **params)
+        else:
+            response = client.messages.create(**params)
+        if response.stop_reason in ("refusal", "max_tokens"):
+            _logger.warning("Smart Inventory: AI reply for %s stopped (%s)", self.display_name, response.stop_reason)
+            return None
+        return next((block.text for block in response.content if block.type == "text"), None)
+
+    @api.model
+    def _si_ai_client(self):
+        """Anthropic client for the key in Settings (or the server's own credentials)."""
+        if anthropic is None:
+            _logger.warning("Smart Inventory: AI is enabled but the 'anthropic' Python package is not installed.")
+            return None
+        key = self.env["smart.inventory.config"].get("ai_api_key") or None
+        if key not in _AI_CLIENTS:
+            _AI_CLIENTS.clear()
+            _AI_CLIENTS[key] = anthropic.Anthropic(api_key=key, timeout=AI_TIMEOUT_SECONDS, max_retries=1)
+        return _AI_CLIENTS[key]
 
     @api.model
     def _parse_ai_response(self, text):
@@ -478,6 +563,37 @@ class ProductTemplate(models.Model):
         today = str(fields.Date.context_today(self))
         self.env["ir.config_parameter"].sudo().set_param(
             "smart_inventory.ai_calls", f"{today}:{self._si_ai_calls_today() + 1}")
+
+    # =========================
+    # DEMO DATA
+    # =========================
+    @api.model
+    def _si_demo_load_history(self):
+        """Demo only: 60 days of confirmed sales so forecasts, KPIs and charts have data."""
+        daily = {
+            "smart_inventory.demo_product_rice": 6.0,
+            "smart_inventory.demo_product_oil": 9.0,
+            "smart_inventory.demo_product_biscuit": 1.5,
+            "smart_inventory.demo_product_lentil": 4.0,
+        }
+        templates = self.browse([self.env.ref(xmlid).id for xmlid in daily])
+        customer = self.env.ref("base.res_partner_2", raise_if_not_found=False) \
+            or self.env["res.partner"].create({"name": "Demo Customer"})
+        rng = random.Random(19)
+        now = fields.Datetime.now()
+        for days_ago in range(60, 0, -1):
+            weekend = (now - timedelta(days=days_ago)).weekday() in (4, 5)
+            lines = []
+            for xmlid, avg in daily.items():
+                qty = round(max(rng.gauss(avg * (1.4 if weekend else 1.0), avg * 0.3), 0.0))
+                if qty:
+                    lines.append((0, 0, {"product_id": self.env.ref(xmlid).product_variant_id.id,
+                                         "product_uom_qty": qty}))
+            if lines:
+                order = self.env["sale.order"].create({"partner_id": customer.id, "order_line": lines})
+                order.write({"state": "sale", "date_order": now - timedelta(days=days_ago)})
+        templates._si_update_forecasts()
+        return True
 
     # =========================
     # HELPERS

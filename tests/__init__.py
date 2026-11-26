@@ -6,3 +6,4 @@ from . import test_sale_flow
 from . import test_security
 from . import test_ui
 from . import test_review_fixes
+from . import test_ai_provider
